@@ -721,7 +721,7 @@ phase3Router.patch(
     const input = updateExtensionRequestSchema.parse(request.body);
     const existing = await prisma.extensionRequest.findUnique({
       where: { id: requestId },
-      select: { id: true, status: true, assignedProfessionalId: true },
+      select: { id: true, status: true, assignedProfessionalId: true, firstRespondedAt: true },
     });
     if (!existing) throw new HttpError(404, "REQUEST_NOT_FOUND", "Extension request not found.");
     if (user.role === UserRole.PROFESSIONAL && existing.assignedProfessionalId !== user.id) {
@@ -755,8 +755,15 @@ phase3Router.patch(
           id: requestId,
           status: existing.status,
           ...(user.role === UserRole.PROFESSIONAL ? { assignedProfessionalId: user.id } : {}),
+          ...(input.status !== undefined ? { firstRespondedAt: existing.firstRespondedAt } : {}),
         },
-        data: input,
+        data: {
+          ...input,
+          ...(input.status !== undefined ? { completedAt: null } : {}),
+          ...(input.status !== undefined && existing.firstRespondedAt === null
+            ? { firstRespondedAt: new Date() }
+            : {}),
+        },
       });
       if (changed.count !== 1) {
         throw new HttpError(409, "REQUEST_CHANGED", "The request changed while you were updating it. Reload and try again.");
@@ -799,7 +806,7 @@ phase3Router.post(
     const input = createExtensionInteractionSchema.parse(request.body);
     const existing = await prisma.extensionRequest.findUnique({
       where: { id: requestId },
-      select: { id: true, status: true, assignedProfessionalId: true },
+      select: { id: true, status: true, assignedProfessionalId: true, firstRespondedAt: true, createdAt: true },
     });
     if (!existing || existing.assignedProfessionalId !== professional.id) {
       throw new HttpError(404, "REQUEST_NOT_FOUND", "Extension request not found.");
@@ -820,9 +827,13 @@ phase3Router.post(
     if (interactionDate > new Date()) {
       throw new HttpError(400, "INVALID_INTERACTION_DATE", "Interaction date cannot be in the future.");
     }
+    if (interactionDate < existing.createdAt) {
+      throw new HttpError(400, "INVALID_INTERACTION_DATE", "Interaction date cannot be before the request was submitted.");
+    }
     const followUpDate = input.followUpDate
       ? new Date(`${input.followUpDate}T00:00:00.000Z`)
       : null;
+    const responseRecordedAt = new Date();
     const interaction = await prisma.$transaction(async (transaction) => {
       const created = await transaction.extensionInteraction.create({
         data: {
@@ -840,8 +851,15 @@ phase3Router.post(
           id: requestId,
           status: existing.status,
           assignedProfessionalId: professional.id,
+          firstRespondedAt: existing.firstRespondedAt,
         },
-        data: { status: nextStatus },
+        data: {
+          status: nextStatus,
+          firstRespondedAt: existing.firstRespondedAt ?? responseRecordedAt,
+          completedAt: nextStatus === ExtensionStatus.RESOLVED || nextStatus === ExtensionStatus.CLOSED
+            ? responseRecordedAt
+            : null,
+        },
       });
       if (changed.count !== 1) {
         throw new HttpError(409, "REQUEST_CHANGED", "The request changed while you were recording this interaction. Reload and try again.");

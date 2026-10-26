@@ -49,6 +49,26 @@ enum AnimalStatus {
   SOLD
 }
 
+enum HealthSeverity {
+  MILD
+  MODERATE
+  SEVERE
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  NOT_REQUIRED
+}
+
+enum CareCategory {
+  VETERINARY_VISIT
+  VACCINATION
+  MEDICATION
+  TREATMENT
+  OTHER
+}
+
 enum FeedUnit {
   KG
   G
@@ -116,6 +136,10 @@ model User {
   submittedRequests ExtensionRequest[] @relation("RequestSubmitter")
   assignedRequests ExtensionRequest[] @relation("RequestAssignee")
   extensionInteractions ExtensionInteraction[] @relation("InteractionProfessional")
+  healthEvents     HealthEvent[] @relation("HealthEventRecorder")
+  professionalAssessments ProfessionalAssessment[] @relation("AssessmentProfessional")
+  careRecords      CareRecord[] @relation("CareRecordRecorder")
+  pilotFeedback    PilotFeedback[]
   auditEntries   AuditLog[]       @relation("AuditActor")
 }
 
@@ -163,6 +187,8 @@ model Animal {
   farm                Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
   feedRecords         FeedRecord[]
   extensionRequests   ExtensionRequest[]
+  healthEvents        HealthEvent[]
+  careRecords         CareRecord[]
 
   @@unique([farmId, internalCode])
   @@unique([farmId, earTag])
@@ -184,6 +210,59 @@ model ProfessionalProfile {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([isListed, verifiedAt])
+}
+
+model HealthEvent {
+  id                String        @id @default(cuid())
+  animalId          String
+  recordedById      String
+  observedAt        DateTime
+  symptoms          String
+  severityObserved  HealthSeverity
+  notes             String?
+  followUpDate      DateTime?     @db.Date
+  followUpStatus    FollowUpStatus @default(NOT_REQUIRED)
+  createdAt         DateTime      @default(now())
+  animal            Animal        @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  recordedBy        User          @relation("HealthEventRecorder", fields: [recordedById], references: [id], onDelete: Restrict)
+  assessments       ProfessionalAssessment[]
+
+  @@index([animalId, observedAt])
+  @@index([followUpStatus, followUpDate])
+}
+
+model ProfessionalAssessment {
+  id                 String         @id @default(cuid())
+  healthEventId      String
+  professionalUserId String
+  assessment         String
+  diagnosisIfMade    String?
+  recordedAt         DateTime       @default(now())
+  followUpDate       DateTime?      @db.Date
+  followUpStatus     FollowUpStatus @default(NOT_REQUIRED)
+  healthEvent        HealthEvent    @relation(fields: [healthEventId], references: [id], onDelete: Cascade)
+  professional       User           @relation("AssessmentProfessional", fields: [professionalUserId], references: [id], onDelete: Restrict)
+
+  @@index([healthEventId, recordedAt])
+  @@index([followUpStatus, followUpDate])
+}
+
+model CareRecord {
+  id              String         @id @default(cuid())
+  animalId        String
+  recordedById    String
+  category        CareCategory
+  details         String
+  startDate       DateTime       @db.Date
+  endDate         DateTime?      @db.Date
+  followUpDate    DateTime?      @db.Date
+  followUpStatus  FollowUpStatus @default(NOT_REQUIRED)
+  createdAt       DateTime       @default(now())
+  animal          Animal         @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  recordedBy      User           @relation("CareRecordRecorder", fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@index([animalId, startDate])
+  @@index([followUpStatus, followUpDate])
 }
 
 model FeedRecord {
@@ -239,6 +318,8 @@ model ExtensionRequest {
   preferredContactValue  String?
   consentedAt            DateTime
   status                 ExtensionStatus    @default(OPEN)
+  firstRespondedAt       DateTime?
+  completedAt            DateTime?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
   farm                   Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
@@ -290,4 +371,24 @@ model AuditLog {
 
   @@index([entityType, entityId, occurredAt])
   @@index([actorUserId, occurredAt])
+}
+
+enum PilotFeedbackCategory {
+  USABILITY
+  DATA_QUALITY
+  ACCESS
+  PROFESSIONAL_WORKFLOW
+  OTHER
+}
+
+model PilotFeedback {
+  id              String                @id @default(cuid())
+  submittedById   String
+  category        PilotFeedbackCategory
+  rating          Int
+  comments        String?
+  createdAt       DateTime              @default(now())
+  submittedBy     User                  @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
 }

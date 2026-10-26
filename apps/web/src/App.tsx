@@ -1,5 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animal, api, Farm, User } from "./api";
+import { PhaseTwoWorkspace } from "./PhaseTwoWorkspace";
+import { PhaseFourWorkspace } from "./PhaseFourWorkspace";
 import { PasswordChangeScreen, PhaseThreeWorkspace } from "./PhaseThreeWorkspace";
 
 type LoadState = "loading" | "signed-out" | "ready";
@@ -253,6 +255,7 @@ export function App() {
           </div>
         </aside>
         <PhaseThreeWorkspace user={user} farms={farms} farmId={farmId} animals={animals} />
+        <PhaseFourWorkspace role={user.role} />
       </div>
     );
   }
@@ -268,6 +271,9 @@ export function App() {
         <button className="nav-item active" type="button"><span aria-hidden="true">▦</span> Overview</button>
         <button className="nav-item" type="button" onClick={() => document.getElementById("animal-register")?.scrollIntoView({ behavior: "smooth" })}>
           <span aria-hidden="true">◉</span> Cattle register
+        </button>
+        <button className="nav-item" type="button" onClick={() => document.getElementById("health-records")?.scrollIntoView({ behavior: "smooth" })}>
+          <span aria-hidden="true">♡</span> Health & care
         </button>
         <button className="nav-item" type="button" onClick={() => document.getElementById("phase-three")?.scrollIntoView({ behavior: "smooth" })}>
           <span aria-hidden="true">◇</span> Feed & support
@@ -286,6 +292,7 @@ export function App() {
       <nav className="mobile-workspace-nav" aria-label="Workspace sections">
         <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><span aria-hidden="true">⌂</span>Overview</button>
         <button type="button" onClick={() => document.getElementById("animal-register")?.scrollIntoView({ behavior: "smooth" })}><span aria-hidden="true">◉</span>Herd</button>
+        <button type="button" onClick={() => document.getElementById("health-records")?.scrollIntoView({ behavior: "smooth" })}><span aria-hidden="true">♡</span>Health</button>
         <button type="button" onClick={() => document.getElementById("phase-three")?.scrollIntoView({ behavior: "smooth" })}><span aria-hidden="true">◇</span>Feed & support</button>
       </nav>
 
@@ -337,6 +344,13 @@ export function App() {
               <StatCard label="BEEF" value={animalCounts.beef} icon="◇" color="blue" footnote="Beef purpose" />
               <StatCard label="FARM RECORDS" value={farms.length} icon="▤" color="plum" footnote="Farm profiles" />
             </section>
+
+            {user && <PhaseTwoWorkspace
+              key={`health-${farmId}`}
+              farmId={farmId}
+              animals={animals}
+              canRecord={user.role === "FARMER" || user.role === "FARM_WORKER"}
+            />}
 
             <div className="content-grid">
               <section className="panel register-panel" id="animal-register">
@@ -402,6 +416,7 @@ export function App() {
             {user && <PhaseThreeWorkspace user={user} farms={farms} farmId={farmId} animals={animals} />}
           </>
         )}
+        {user && <PhaseFourWorkspace key={`pilot-${farmId}`} farmId={farmId || undefined} role={user.role} />}
         <footer className="page-footer">
           <span>AgriHerd · Better herd management, one record at a time.</span>
           <span>Health and care decisions should be reviewed with a qualified professional.</span>

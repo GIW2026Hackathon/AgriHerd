@@ -873,7 +873,91 @@ function ProfessionalRequestCard({
         <label className="form-field"><span>Outcome (required to resolve or close)</span><textarea name="outcome" rows={2} maxLength={2000} placeholder="Record the outcome or next step." /></label>
         <button className="button button-primary" type="submit">Save interaction</button>
       </form>}
+      {item.status !== "CLOSED" && item.category === "HEALTH" && item.animal && (
+        <ProfessionalAssessmentForm
+          animalId={item.animal.id}
+          onError={onError}
+        />
+      )}
     </article>
+  );
+}
+
+function ProfessionalAssessmentForm({
+  animalId,
+  onError,
+}: {
+  animalId: string;
+  onError: (message: string) => void;
+}) {
+  const [events, setEvents] = useState<Array<{ id: string; symptoms: string; observedAt: string; assessments: Array<{ id: string; assessment: string }> }>>([]);
+  const [busy, setBusy] = useState(true);
+  const [notice, setNotice] = useState("");
+
+  async function refreshEvents() {
+    const result = await api<{ data: { healthEvents: typeof events } }>(`/animals/${animalId}/history`);
+    setEvents(result.data.healthEvents);
+  }
+
+  useEffect(() => {
+    let current = true;
+    api<{ data: { healthEvents: typeof events } }>(`/animals/${animalId}/history`)
+      .then(({ data }) => {
+        if (current) setEvents(data.healthEvents);
+      })
+      .catch((loadError: unknown) => {
+        if (current) onError(errorMessage(loadError, "Could not load the consented animal history."));
+      })
+      .finally(() => {
+        if (current) setBusy(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, [animalId, onError]);
+
+  async function recordAssessment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const healthEventId = String(form.get("healthEventId"));
+    if (!healthEventId) return;
+    try {
+      await api(`/health-events/${healthEventId}/assessments`, {
+        method: "POST",
+        body: JSON.stringify({
+          assessment: form.get("assessment"),
+          diagnosisIfMade: form.get("diagnosisIfMade") || null,
+          followUpDate: form.get("followUpDate") || null,
+        }),
+      });
+      formElement.reset();
+      setNotice("Professional assessment recorded separately from the farmer observation.");
+      await refreshEvents();
+    } catch (saveError) {
+      onError(errorMessage(saveError, "Could not record the professional assessment."));
+    }
+  }
+
+  return (
+    <section className="professional-health-assessment">
+      <div className="phase-two-professional-heading"><strong>Health assessments</strong><span>Separate professional record</span></div>
+      {busy ? <p className="phase-muted">Loading consented observations…</p> : events.length === 0 ? (
+        <div className="phase-empty">No health observations are linked to this animal yet. Any assessment you record here will be attached to an existing farmer observation.</div>
+      ) : <>
+        {notice && <p className="phase-two-inline-notice" role="status">{notice}</p>}
+        <form className="interaction-form" onSubmit={recordAssessment}>
+          <label className="form-field"><span>Farmer observation</span><select name="healthEventId" required defaultValue="">
+            <option value="" disabled>Select an observation</option>
+            {events.map((healthEvent) => <option key={healthEvent.id} value={healthEvent.id}>{new Date(healthEvent.observedAt).toLocaleDateString()} · {healthEvent.symptoms.slice(0, 100)}</option>)}
+          </select></label>
+          <label className="form-field"><span>Professional assessment</span><textarea name="assessment" rows={3} maxLength={4000} required placeholder="Record your assessment without changing the farmer’s original observation." /></label>
+          <label className="form-field"><span>Diagnosis, if made by you (optional)</span><input name="diagnosisIfMade" maxLength={500} /></label>
+          <label className="form-field"><span>Follow-up date (optional)</span><input name="followUpDate" type="date" /></label>
+          <button className="button button-primary" type="submit">Save professional assessment</button>
+        </form>
+      </>}
+    </section>
   );
 }
 

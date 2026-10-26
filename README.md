@@ -100,6 +100,8 @@ The initial deployment will target dairy farming in Kenya, subject to validation
 - Care/treatment records and follow-up dates.
 - A basic dashboard that distinguishes farmer observations from professional entries.
 
+**Implemented:** Farm members can record observations, severity as observed, care already provided, and scheduled follow-ups. Assigned, verified professionals can add separate assessments to a consented health request without changing the original observation. Animal timelines include health, assessment, care, and feed records. The farm dashboard summarizes recent concerns, due follow-ups, and open support requests; it does not diagnose or triage animals.
+
 ### Phase 3: Nutrition and Extension
 
 - Feed records and professionally reviewed nutrition guidance.
@@ -108,6 +110,10 @@ The initial deployment will target dairy farming in Kenya, subject to validation
 ### Phase 4: MVP Hardening and Pilot
 
 - Validation, access review, basic reports, backup/recovery procedures, usability improvements, and pilot feedback.
+
+**Implemented:** Farm-scoped 90-day reports with CSV export measure active-herd identity/health coverage and extension response, completion, and next-step recording. Farmers, farm workers, and professionals can submit pilot feedback; administrators can review feedback without submitter names or farm details. Report periods and feedback fields are validated, and extension response/completion timestamps support pilot measurement. The [pilot operations runbook](./docs/PILOT_OPERATIONS.md) defines backup, restore, consent, retention, access, and go/no-go procedures.
+
+**Pilot gate:** The county, participating group, named backup owner, consent and retention policy, production deployment, and a successful restore rehearsal still require project-team approval before using real farm data.
 
 Advanced analytics, offline synchronisation, SMS, sensors, integrations, and detailed dairy-production or beef-growth workflows remain later-release candidates.
 
@@ -190,6 +196,24 @@ Do not commit credentials, database passwords, API keys, or other secrets to the
 
 Key REST routes are under `/api/v1`: `/farms/:farmId/feed-records`, `/animals/:animalId/feed-records`, `/nutrition-guidance`, `/professionals`, `/farms/:farmId/extension-requests`, `/extension-requests`, and `/extension-requests/:requestId/interactions`. Administrator routes provision professionals and manage reviewed resources; professional directory status is opt-in.
 
+### Phase 2 health records and access
+
+- Farm owners and workers can record dated health observations and care already provided for animals on their farm. Severity is the observer's description, not a clinical assessment.
+- Health observations, professional assessments, care records, and feed records are stored as separate history entries. An assessment never overwrites the farmer's observation.
+- A verified professional can read a consented animal history and add an assessment only for that animal while assigned to its health extension request. Other farms, unrelated professionals, and administrators without farm membership do not receive that history.
+- Farmers and farm workers can mark scheduled observation, care, and professional-assessment follow-ups complete. Changes and new health entries are audit logged.
+- The farm summary counts registered beef/dairy animals, follow-ups due today or earlier, and open support requests. It shows recent concerns and scheduled follow-ups; it does not generate diagnosis, triage, or automated clinical warnings.
+- Care forms document care that has already occurred; they do not recommend medication or treatment. Severe or rapidly worsening signs, sudden deaths, or suspected contagious disease require prompt direct contact with a veterinarian or the relevant animal-health authority.
+
+Phase 2 REST routes are under `/api/v1`: `/farms/:farmId/summary`, `/animals/:animalId/history`, `/animals/:animalId/health-events`, `/animals/:animalId/care-records`, `/health-events/:eventId/assessments`, and the corresponding follow-up status routes.
+
+### Phase 4 reports, feedback, and pilot readiness
+
+- Farm reports require active membership and contain aggregate measures only. `GET /farms/:farmId/reports/summary` returns JSON; `GET /farms/:farmId/reports/summary.csv` downloads the same report. Optional `from` and `to` query dates use `YYYY-MM-DD`; the default period is the preceding 90 days and the maximum is 366 days.
+- Farmers, farm workers, and professionals can submit a 1–5 pilot rating and optional comment at `POST /pilot/feedback`. Only administrators can list the latest 200 submissions at `GET /pilot/feedback`; submitter names and farm details are not returned.
+- `firstRespondedAt` is recorded on the first professional interaction or explicit acknowledgement/status update. `completedAt` is set when an interaction resolves or closes a request and cleared if it is reopened. Migration backfills use historical interaction dates and last-updated timestamps as estimates.
+- Report measures are pilot indicators, not clinical, service-quality, or staff-performance judgments. Their definitions and limitations are in the [pilot operations runbook](./docs/PILOT_OPERATIONS.md).
+
 ## Development Principles
 
 AgriHerd will follow these principles:
@@ -205,9 +229,9 @@ AgriHerd will follow these principles:
 
 ## Project Status
 
-**Status:** Phase 1 foundation and Phase 3 feed/nutrition/extension workflows implemented in code; build and database-backed verification are pending.
+**Status:** Phase 1 foundation, Phase 2 health and records, Phase 3 nutrition/extension workflows, and Phase 4 reporting/pilot-feedback workflows implemented in code. Automated tests, builds, Prisma generation, and database-backed migration/restore validation remain pending in a configured environment; real-data pilot approval is outstanding.
 
-The application includes account registration/sign-in, farm profiles, farm-scoped access checks, cattle registration, feed records, reviewed nutrition resources, an opt-in professional directory, and assigned extension requests with professional interactions. Phase 2 animal-health timelines and care records remain unimplemented. Install Node.js/npm and configure PostgreSQL before running migrations, tests, or builds.
+The application includes account registration/sign-in, farm profiles, farm-scoped access checks, cattle registration, health timelines, farmer observations, assigned professional assessments, care and follow-up records, farm health summaries, feed records, reviewed nutrition resources, an opt-in professional directory, assigned extension requests with professional interactions, aggregate farm reports, and pilot feedback. Install Node.js/npm and configure PostgreSQL before running migrations, tests, or builds. Complete the pilot readiness gate in the [operations runbook](./docs/PILOT_OPERATIONS.md) before collecting real farm data.
 
 ## Contributing
 
@@ -230,10 +254,11 @@ Detailed contribution guidelines and branch conventions will be added as the tea
 - [x] Implement farmer registration/sign-in, farm management, and farm membership checks.
 - [x] Implement beef/dairy cattle registration and farm-scoped search.
 - [x] Implement feed records, reviewed nutrition publication, and assigned extension requests.
-- [ ] Implement health monitoring and follow-up records.
+- [x] Implement health observations, professional assessments, care records, and follow-ups.
 - [ ] Implement dairy production tracking.
-- [ ] Add reminders, alerts, and reports.
-- [ ] Validate Phase 1 and Phase 3 migrations, tests, and builds in a configured environment.
+- [x] Add basic farm reports and pilot feedback.
+- [ ] Add reminders and alerts.
+- [ ] Validate all phase migrations, tests, builds, and the backup/restore procedure in a configured environment.
 - [ ] Test the system with representative users.
 - [ ] Pilot the cattle management module.
 - [ ] Evaluate further dairy and beef workflows.
