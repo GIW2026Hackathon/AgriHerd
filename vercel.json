@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/((?!media/|architecture.md|schema.sql|favicon.svg).*)", "destination": "/index.html" }]
+}
