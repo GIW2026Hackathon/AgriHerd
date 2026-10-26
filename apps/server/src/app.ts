@@ -1,8 +1,9 @@
 import express from "express";
 import helmet from "helmet";
-import { loadSession, assertSameOrigin } from "./auth.js";
+import { loadSession, assertSameOrigin, requirePasswordRotation } from "./auth.js";
 import { config } from "./config.js";
 import { errorHandler, HttpError } from "./http.js";
+import { phase3Router } from "./phase3-routes.js";
 import { apiRouter } from "./routes.js";
 
 export const app = express();
@@ -15,7 +16,9 @@ app.use(helmet());
 app.use(express.json({ limit: "32kb" }));
 app.use("/api/v1", assertSameOrigin);
 app.use("/api/v1", loadSession);
+app.use("/api/v1", requirePasswordRotation);
 app.use("/api/v1", apiRouter);
+app.use("/api/v1", phase3Router);
 app.get("/health", (_request, response) => {
   response.json({ data: { status: "ok" } });
 });

@@ -10,6 +10,7 @@ export type AuthenticatedUser = {
   fullName: string;
   email: string;
   role: "FARMER" | "FARM_WORKER" | "PROFESSIONAL" | "ADMIN";
+  mustChangePassword: boolean;
 };
 
 declare global {
@@ -85,6 +86,7 @@ export async function loadSession(request: Request, _response: Response, next: N
       fullName: session.user.fullName,
       email: session.user.email,
       role: session.user.role,
+      mustChangePassword: session.user.mustChangePassword,
     };
     next();
   } catch (error) {
@@ -107,6 +109,17 @@ export function requireFarmer(request: Request): AuthenticatedUser {
   return user;
 }
 
+export function requireRole(
+  request: Request,
+  allowedRoles: AuthenticatedUser["role"][],
+): AuthenticatedUser {
+  const user = requireUser(request);
+  if (!allowedRoles.includes(user.role)) {
+    throw new HttpError(403, "FORBIDDEN", "You do not have permission to make this change.");
+  }
+  return user;
+}
+
 export function assertSameOrigin(request: Request, _response: Response, next: NextFunction) {
   const method = request.method.toUpperCase();
   if (["GET", "HEAD", "OPTIONS"].includes(method)) {
@@ -116,6 +129,25 @@ export function assertSameOrigin(request: Request, _response: Response, next: Ne
 
   if (request.get("origin") !== config.WEB_ORIGIN) {
     next(new HttpError(403, "INVALID_ORIGIN", "Request origin is not allowed."));
+    return;
+  }
+  next();
+}
+
+export function requirePasswordRotation(request: Request, _response: Response, next: NextFunction) {
+  if (!request.user?.mustChangePassword) {
+    next();
+    return;
+  }
+
+  const permittedPaths = new Set([
+    "/auth/session",
+    "/auth/change-password",
+    "/auth/logout",
+  ]);
+  const routePath = request.originalUrl.split("?")[0].slice("/api/v1".length);
+  if (!permittedPaths.has(routePath)) {
+    next(new HttpError(403, "PASSWORD_CHANGE_REQUIRED", "Change your initial password before continuing."));
     return;
   }
   next();

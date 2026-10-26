@@ -3,6 +3,7 @@ export type User = {
   fullName: string;
   email: string;
   role: "FARMER" | "FARM_WORKER" | "PROFESSIONAL" | "ADMIN";
+  mustChangePassword: boolean;
 };
 
 export type Farm = {

@@ -176,6 +176,18 @@ Run the focused server validation tests with `npm test`. Build both applications
 
 Do not commit credentials, database passwords, API keys, or other secrets to the repository.
 
+### Phase 3 workflows and access
+
+- Farm members can record feed type, positive quantity, explicit unit (including a required name for custom units), date, optional animal, and notes. Records are private to active farm members.
+- Signed-in users can browse only published nutrition resources. Publication requires a named source, review date, and a provisioned professional reviewer.
+- Administrators must independently verify a professional's qualifications before provisioning an account. The professional starts unlisted and must opt in with a public contact method before appearing in the directory.
+- New professional accounts must change their initial password before entering the workspace. Share initial credentials through a secure channel, never in source control or ordinary logs.
+- Farmers choose a listed professional and a preferred contact method and explicitly consent to sharing when submitting a support request. The selected professional can view only requests assigned to their account and the contact detail the farmer chose to share; other farm members do not receive that contact detail. Farm members can view requests for their own farms. A professional interaction and outcome remain as history and do not overwrite the farmer's original request.
+- Administrators manage professional accounts and nutrition publication, but do not receive routine access to private farm requests. A support request requires a listed professional; if the directory is empty, the farmer is directed to contact local services directly rather than being shown a false submission confirmation.
+- Urgency is a farmer-recorded preference, not a triage decision or response-time promise. The system does not diagnose conditions, prescribe treatment, or generate personalised feed rations.
+
+Key REST routes are under `/api/v1`: `/farms/:farmId/feed-records`, `/animals/:animalId/feed-records`, `/nutrition-guidance`, `/professionals`, `/farms/:farmId/extension-requests`, `/extension-requests`, and `/extension-requests/:requestId/interactions`. Administrator routes provision professionals and manage reviewed resources; professional directory status is opt-in.
+
 ## Development Principles
 
 AgriHerd will follow these principles:
@@ -191,9 +203,9 @@ AgriHerd will follow these principles:
 
 ## Project Status
 
-**Status:** Phase 1 foundation implementation started.
+**Status:** Phase 1 foundation and Phase 3 feed/nutrition/extension workflows implemented in code; build and database-backed verification are pending.
 
-The first implementation slice includes account registration/sign-in, farm profiles, farm-scoped access checks, audit entries for farm and animal changes, and cattle registration for beef or dairy. Health records, feed/nutrition, extension workflows, and production features remain planned for later phases. The Phase 1 exit outcome still requires database-backed execution and verification in a configured development environment.
+The application includes account registration/sign-in, farm profiles, farm-scoped access checks, cattle registration, feed records, reviewed nutrition resources, an opt-in professional directory, and assigned extension requests with professional interactions. Phase 2 animal-health timelines and care records remain unimplemented. Install Node.js/npm and configure PostgreSQL before running migrations, tests, or builds.
 
 ## Contributing
 
@@ -215,11 +227,11 @@ Detailed contribution guidelines and branch conventions will be added as the tea
 - [x] Establish the Phase 1 project structure, API, database schema, and initial migration.
 - [x] Implement farmer registration/sign-in, farm management, and farm membership checks.
 - [x] Implement beef/dairy cattle registration and farm-scoped search.
+- [x] Implement feed records, reviewed nutrition publication, and assigned extension requests.
 - [ ] Implement health monitoring and follow-up records.
 - [ ] Implement dairy production tracking.
-- [ ] Implement feed inventory and reviewed nutrition resources.
-- [ ] Implement extension service requests.
 - [ ] Add reminders, alerts, and reports.
+- [ ] Validate Phase 1 and Phase 3 migrations, tests, and builds in a configured environment.
 - [ ] Test the system with representative users.
 - [ ] Pilot the cattle management module.
 - [ ] Evaluate further dairy and beef workflows.

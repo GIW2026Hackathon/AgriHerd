@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animal, api, Farm, User } from "./api";
+import { PasswordChangeScreen, PhaseThreeWorkspace } from "./PhaseThreeWorkspace";
 
 type LoadState = "loading" | "signed-out" | "ready";
 
@@ -67,6 +68,7 @@ export function App() {
         }
         setUser(data.user);
         setLoadState("ready");
+        if (data.user.mustChangePassword) return;
         try {
           await refreshFarms();
         } catch (requestError) {
@@ -131,7 +133,7 @@ export function App() {
       });
       setUser(result.data.user);
       setLoadState("ready");
-      await refreshFarms();
+      if (!result.data.user.mustChangePassword) await refreshFarms();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Sign-in failed.");
     }
@@ -213,6 +215,43 @@ export function App() {
     return <AuthScreen onSubmit={handleAuth} error={error} />;
   }
 
+  if (user?.mustChangePassword) {
+    return (
+      <PasswordChangeScreen
+        fullName={user.fullName}
+        onChanged={() => setUser((current) => current ? { ...current, mustChangePassword: false } : current)}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (user?.role === "PROFESSIONAL" || user?.role === "ADMIN") {
+    return (
+      <div className="app-shell">
+        <aside className="sidebar">
+          <a className="brand" href="/" aria-label="AgriHerd home">
+            <span className="brand-mark">A</span>
+            <span>AgriHerd<small>HERD MANAGEMENT</small></span>
+          </a>
+          <div className="sidebar-label">WORKSPACE</div>
+          <button className="nav-item active" type="button">
+            <span aria-hidden="true">▦</span> {user.role === "ADMIN" ? "Administration" : "My workspace"}
+          </button>
+          <div className="sidebar-note">
+            <span className="note-icon" aria-hidden="true">✳</span>
+            <p>Professional entries stay distinct from farmer observations.</p>
+          </div>
+          <div className="sidebar-user">
+            <div className="avatar">{user.fullName.slice(0, 1).toUpperCase()}</div>
+            <div className="user-copy"><strong>{user.fullName}</strong><span>{user.role === "ADMIN" ? "Administrator" : "Livestock professional"}</span></div>
+            <button className="icon-button" type="button" onClick={handleSignOut} aria-label="Sign out" title="Sign out">↗</button>
+          </div>
+        </aside>
+        <PhaseThreeWorkspace user={user} farms={farms} farmId={farmId} animals={animals} />
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -224,6 +263,9 @@ export function App() {
         <button className="nav-item active" type="button"><span aria-hidden="true">▦</span> Overview</button>
         <button className="nav-item" type="button" onClick={() => document.getElementById("animal-register")?.scrollIntoView({ behavior: "smooth" })}>
           <span aria-hidden="true">◉</span> Cattle register
+        </button>
+        <button className="nav-item" type="button" onClick={() => document.getElementById("phase-three")?.scrollIntoView({ behavior: "smooth" })}>
+          <span aria-hidden="true">◇</span> Feed & support
         </button>
         <div className="sidebar-note">
           <span className="note-icon" aria-hidden="true">✳</span>
@@ -244,7 +286,10 @@ export function App() {
           </div>
           <label className="farm-switcher">
             <span className="farm-dot" aria-hidden="true" />
-            <select aria-label="Active farm" value={farmId} onChange={(event) => setFarmId(event.target.value)}>
+            <select aria-label="Active farm" value={farmId} onChange={(event) => {
+              setAnimals([]);
+              setFarmId(event.target.value);
+            }}>
               {farms.length === 0 && <option value="">No farm selected</option>}
               {farms.map((farm) => <option key={farm.id} value={farm.id}>{farm.name}</option>)}
             </select>
@@ -292,7 +337,9 @@ export function App() {
                   <span className="panel-icon" aria-hidden="true">＋</span>
                 </div>
                 <p className="panel-intro">Create a clear identity record for each animal. You can add more detail later.</p>
-                <AnimalForm onSubmit={handleCreateAnimal} />
+                {user?.role === "FARMER"
+                  ? <AnimalForm onSubmit={handleCreateAnimal} />
+                  : <div className="phase-empty">Only farm owners can register cattle. Ask the farm owner to update this record.</div>}
               </section>
 
               <section className="panel herd-panel">
@@ -341,6 +388,7 @@ export function App() {
               <p className="panel-intro">Keep records for multiple farms in separate workspaces.</p>
               <FarmForm onSubmit={handleCreateFarm} compact />
             </section>
+            {user && <PhaseThreeWorkspace user={user} farms={farms} farmId={farmId} animals={animals} />}
           </>
         )}
         <footer className="page-footer">

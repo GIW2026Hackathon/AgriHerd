@@ -9,7 +9,7 @@ const optionalText = (max = 120) =>
     z.string().trim().max(max).nullable().optional(),
   );
 
-const passwordSchema = z
+export const passwordSchema = z
   .string()
   .min(12, "Use at least 12 characters for your password.")
   .max(128)
@@ -28,6 +28,16 @@ export const loginSchema = z.object({
   email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
   password: passwordSchema,
 });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1).max(128),
+    newPassword: passwordSchema,
+  })
+  .refine((value) => value.currentPassword !== value.newPassword, {
+    path: ["newPassword"],
+    message: "Choose a password different from your current password.",
+  });
 
 export const createFarmSchema = z.object({
   name: requiredText("Farm name", 120),

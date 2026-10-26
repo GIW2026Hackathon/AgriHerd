@@ -11,6 +11,7 @@ import { asyncRoute, HttpError } from "./http.js";
 import {
   createAnimalSchema,
   createFarmSchema,
+  changePasswordSchema,
   loginSchema,
   registerSchema,
   updateAnimalSchema,
@@ -47,7 +48,7 @@ apiRouter.post(
           passwordHash,
           role: UserRole.FARMER,
         },
-        select: { id: true, fullName: true, email: true, role: true },
+        select: { id: true, fullName: true, email: true, role: true, mustChangePassword: true },
       });
       await createSession(user.id, response);
       response.status(201).json({ data: { user } });
@@ -74,7 +75,13 @@ apiRouter.post(
     await createSession(user.id, response);
     response.json({
       data: {
-        user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role },
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          mustChangePassword: user.mustChangePassword,
+        },
       },
     });
   }),
@@ -92,6 +99,41 @@ apiRouter.get(
   "/auth/session",
   asyncRoute(async (request, response) => {
     response.json({ data: { user: request.user ?? null } });
+  }),
+);
+
+apiRouter.post(
+  "/auth/change-password",
+  authLimiter,
+  asyncRoute(async (request, response) => {
+    const user = requireUser(request);
+    const input = changePasswordSchema.parse(request.body);
+    const account = await prisma.user.findUnique({ where: { id: user.id } });
+    if (!account || !(await bcrypt.compare(input.currentPassword, account.passwordHash))) {
+      throw new HttpError(400, "CURRENT_PASSWORD_INCORRECT", "Current password is incorrect.");
+    }
+    const passwordHash = await bcrypt.hash(input.newPassword, 12);
+    await prisma.$transaction(async (transaction) => {
+      await transaction.user.update({
+        where: { id: user.id },
+        data: { passwordHash, mustChangePassword: false },
+      });
+      await transaction.session.deleteMany({ where: { userId: user.id } });
+      await transaction.auditLog.create({
+        data: {
+          actorUserId: user.id,
+          entityType: "User",
+          entityId: user.id,
+          action: "PASSWORD_CHANGED",
+        },
+      });
+    });
+    await createSession(user.id, response);
+    response.json({
+      data: {
+        user: { ...user, mustChangePassword: false },
+      },
+    });
   }),
 );
 
