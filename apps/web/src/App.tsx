@@ -29,6 +29,7 @@ function displayAge(animal: Animal) {
 
 export function App() {
   const [loadState, setLoadState] = useState<LoadState>("loading");
+  const [authMode, setAuthMode] = useState<"login" | "register" | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [farmId, setFarmId] = useState("");
@@ -133,6 +134,7 @@ export function App() {
       });
       setUser(result.data.user);
       setLoadState("ready");
+      setAuthMode(null);
       if (!result.data.user.mustChangePassword) await refreshFarms();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Sign-in failed.");
@@ -146,6 +148,7 @@ export function App() {
       setFarms([]);
       setFarmId("");
       setAnimals([]);
+      setAuthMode(null);
       setLoadState("signed-out");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Could not sign out.");
@@ -208,11 +211,13 @@ export function App() {
   }
 
   if (loadState === "loading") {
-    return <main className="loading-screen"><span className="brand-mark">A</span><p>Preparing your farm workspace…</p></main>;
+    return <main className="loading-screen"><BrandMark /><p>Preparing your farm workspace…</p></main>;
   }
 
   if (loadState === "signed-out") {
-    return <AuthScreen onSubmit={handleAuth} error={error} />;
+    return authMode
+      ? <AuthScreen initialMode={authMode} onBack={() => setAuthMode(null)} onSubmit={handleAuth} error={error} />
+      : <WelcomeScreen onAuth={setAuthMode} error={error} />;
   }
 
   if (user?.mustChangePassword) {
@@ -229,8 +234,8 @@ export function App() {
     return (
       <div className="app-shell">
         <aside className="sidebar">
-          <a className="brand" href="/" aria-label="AgriHerd home">
-            <span className="brand-mark">A</span>
+          <a className="brand brand-light" href="/" aria-label="AgriHerd home">
+            <BrandMark />
             <span>AgriHerd<small>HERD MANAGEMENT</small></span>
           </a>
           <div className="sidebar-label">WORKSPACE</div>
@@ -255,8 +260,8 @@ export function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <a className="brand" href="/" aria-label="AgriHerd home">
-          <span className="brand-mark">A</span>
+        <a className="brand brand-light" href="/" aria-label="AgriHerd home">
+          <BrandMark />
           <span>AgriHerd<small>HERD MANAGEMENT</small></span>
         </a>
         <div className="sidebar-label">WORKSPACE</div>
@@ -277,6 +282,12 @@ export function App() {
           <button className="icon-button" type="button" onClick={handleSignOut} aria-label="Sign out" title="Sign out">↗</button>
         </div>
       </aside>
+
+      <nav className="mobile-workspace-nav" aria-label="Workspace sections">
+        <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><span aria-hidden="true">⌂</span>Overview</button>
+        <button type="button" onClick={() => document.getElementById("animal-register")?.scrollIntoView({ behavior: "smooth" })}><span aria-hidden="true">◉</span>Herd</button>
+        <button type="button" onClick={() => document.getElementById("phase-three")?.scrollIntoView({ behavior: "smooth" })}><span aria-hidden="true">◇</span>Feed & support</button>
+      </nav>
 
       <main className="main-content">
         <header className="topbar">
@@ -400,15 +411,92 @@ export function App() {
   );
 }
 
-function AuthScreen({ onSubmit, error }: { onSubmit: (event: FormEvent<HTMLFormElement>) => void; error: string }) {
-  const [mode, setMode] = useState<"login" | "register">("login");
+function BrandMark() {
+  return (
+    <svg className="brand-symbol" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M8 26c0-8.8 7.2-16 16-16s16 7.2 16 16v6c0 1.1-.9 2-2 2H10c-1.1 0-2-.9-2-2v-6Z" fill="currentColor" />
+      <path d="M14 26c0-5.5 4.5-10 10-10s10 4.5 10 10M13 38h22M17 38v4M31 38v4" stroke="var(--brand-mark-stroke)" strokeWidth="3" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WelcomeScreen({ onAuth, error }: { onAuth: (mode: "login" | "register") => void; error: string }) {
+  return (
+    <main className="welcome-page">
+      {error && <div className="welcome-error" role="alert">{error}</div>}
+      <section className="welcome-hero">
+        <img className="welcome-hero-image" src="/images/hero-ankole.jpg" alt="Cattle grazing in green pasture" fetchPriority="high" />
+        <div className="welcome-hero-shade" />
+        <header className="welcome-nav">
+          <a className="brand brand-light" href="/" aria-label="AgriHerd home">
+            <BrandMark />
+            <span>AgriHerd<small>HERD MANAGEMENT</small></span>
+          </a>
+          <div className="welcome-actions">
+            <button className="button button-hero-quiet" type="button" onClick={() => onAuth("login")}>Sign in</button>
+            <button className="button button-hero-primary" type="button" onClick={() => onAuth("register")}>Create an account <span aria-hidden="true">→</span></button>
+          </div>
+        </header>
+        <div className="welcome-hero-copy">
+          <span className="welcome-eyebrow">CLEAR RECORDS. BETTER FARMING.</span>
+          <h1>Know your herd.<br /><em>Care with confidence.</em></h1>
+          <p>Keep farm and cattle records together, record feed use, and connect with listed livestock professionals when you need support.</p>
+          <div className="welcome-actions welcome-actions-main">
+            <button className="button button-hero-primary" type="button" onClick={() => onAuth("register")}>Get started <span aria-hidden="true">→</span></button>
+            <button className="button button-hero-quiet" type="button" onClick={() => onAuth("login")}>Sign in to your farm</button>
+          </div>
+          <div className="welcome-trust"><span aria-hidden="true">✓</span> Farm-scoped records <span aria-hidden="true">✓</span> Farmer-controlled support requests</div>
+        </div>
+        <span className="welcome-photo-credit">Designed for the everyday work of caring for livestock.</span>
+      </section>
+      <section className="welcome-features" aria-labelledby="welcome-features-title">
+        <div className="welcome-section-heading">
+          <span className="section-kicker">A PRACTICAL FARM WORKSPACE</span>
+          <h2 id="welcome-features-title">The essentials, in one place</h2>
+          <p>Useful records for the work you do every day, with privacy and professional oversight built in.</p>
+        </div>
+        <div className="welcome-feature-grid">
+          <article className="welcome-feature-card">
+            <span className="welcome-feature-icon" aria-hidden="true">01</span>
+            <h3>Keep a clear herd register</h3>
+            <p>Register beef and dairy cattle, then find animals by name, internal ID, or ear tag.</p>
+          </article>
+          <article className="welcome-feature-card">
+            <span className="welcome-feature-icon" aria-hidden="true">02</span>
+            <h3>Record feed and read guidance</h3>
+            <p>Log feed use by animal or farm, and read nutrition resources that have been reviewed before publication.</p>
+          </article>
+          <article className="welcome-feature-card">
+            <span className="welcome-feature-icon" aria-hidden="true">03</span>
+            <h3>Follow up with professionals</h3>
+            <p>Choose a listed professional, consent to share request details, and follow the recorded next steps.</p>
+          </article>
+        </div>
+        <p className="welcome-disclaimer">AgriHerd helps organise records and connect farmers with professionals. It does not diagnose illness, prescribe treatment, or replace veterinary care.</p>
+      </section>
+    </main>
+  );
+}
+
+function AuthScreen({
+  initialMode,
+  onBack,
+  onSubmit,
+  error,
+}: {
+  initialMode: "login" | "register";
+  onBack: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  error: string;
+}) {
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   return (
     <main className="auth-layout">
       <section className="auth-story">
-        <a className="brand brand-light" href="/">
-          <span className="brand-mark">A</span>
+        <button className="brand brand-light brand-home-button" type="button" onClick={onBack}>
+          <BrandMark />
           <span>AgriHerd<small>HERD MANAGEMENT</small></span>
-        </a>
+        </button>
         <div className="story-copy">
           <span className="story-label">GOOD RECORDS. BETTER DECISIONS.</span>
           <h1>Know your herd.<br /><em>Care with confidence.</em></h1>
@@ -422,6 +510,7 @@ function AuthScreen({ onSubmit, error }: { onSubmit: (event: FormEvent<HTMLFormE
         <span className="story-caption">Designed for the everyday work of caring for livestock.</span>
       </section>
       <section className="auth-main">
+        <button className="auth-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> Back to AgriHerd</button>
         <div className="auth-card">
           <div className="section-kicker">{mode === "login" ? "WELCOME BACK" : "GET STARTED"}</div>
           <h2>{mode === "login" ? "Sign in to your farm" : "Create your farmer account"}</h2>

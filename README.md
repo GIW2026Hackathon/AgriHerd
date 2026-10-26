@@ -126,6 +126,8 @@ Advanced analytics, offline synchronisation, SMS, sensors, integrations, and det
 
 The architecture will prioritise modularity, maintainability, data security, and the ability to extend the platform as requirements grow.
 
+The web client uses AgriHerd's illustrated farm landing page, responsive workspace navigation, and warm, accessible visual theme. Its screens remain connected to this application's existing API and permissions; features not yet implemented are not presented as available.
+
 ## High-Level System Modules
 
 AgriHerd will be organised around the following modules:
