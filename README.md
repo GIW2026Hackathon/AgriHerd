@@ -178,6 +178,8 @@ AgriHerd will be organised around the following modules:
 
 The API listens on `127.0.0.1:4000` by default; Vite proxies API calls to it. For a production deployment, configure the host, trusted proxy, HTTPS, and `WEB_ORIGIN` for the actual deployment environment.
 
+On Windows, `npm run dev` launches the API and web client directly with Node, so it does not depend on `cmd.exe` being available through `PATH`.
+
 To provision an administrator account, set `SEED_ADMIN_EMAIL`, `SEED_ADMIN_NAME`, and a unique `SEED_ADMIN_PASSWORD` in `apps/server/.env`, then run `npm run db:seed-admin`. Public registration always creates farmer accounts; users cannot grant themselves professional or administrator access.
 
 Run the focused server validation tests with `npm test`. Build both applications with `npm run build`.
