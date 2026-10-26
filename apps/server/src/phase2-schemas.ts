@@ -46,7 +46,10 @@ export const updateFollowUpStatusSchema = z.object({
 export const createProfessionalAssessmentSchema = z.object({
   healthEventId: cuid,
   assessment: requiredText("Assessment", 4000),
-  diagnosisIfMade: optionalText(500),
+  diagnosisIfMade: z.preprocess(
+    (value) => (value === "" ? null : value),
+    z.string().trim().min(1).max(500).nullable().optional(),
+  ),
   followUpDate: recordDate.nullable().optional(),
 });
 

@@ -6,7 +6,7 @@ import {
   Prisma,
   UserRole,
 } from "@prisma/client";
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { z } from "zod";
 import { requireFarmMembership } from "./access.js";
 import { requireRole, requireUser } from "./auth.js";
@@ -70,7 +70,12 @@ const requestSummary = {
 
 type RequestSummary = Prisma.ExtensionRequestGetPayload<{ select: typeof requestSummary }>;
 
-async function requireAccessibleRequest(requestId: string, userId: string, role: UserRole) {
+async function requireAccessibleRequest(
+  request: Request,
+  requestId: string,
+  userId: string,
+  role: UserRole,
+) {
   const extensionRequest = await prisma.extensionRequest.findUnique({
     where: { id: requestId },
     select: { id: true, farmId: true, assignedProfessionalId: true },
@@ -701,7 +706,7 @@ phase3Router.get(
   asyncRoute(async (request, response) => {
     const user = requireUser(request);
     const requestId = requestIdSchema.parse(request.params.requestId);
-    const accessible = await requireAccessibleRequest(requestId, user.id, user.role);
+    const accessible = await requireAccessibleRequest(request, requestId, user.id, user.role);
     const extensionRequest = await prisma.extensionRequest.findUnique({
       where: { id: accessible.id },
       select: requestSummary,

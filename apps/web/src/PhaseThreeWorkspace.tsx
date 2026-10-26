@@ -181,9 +181,9 @@ export function PasswordChangeScreen({
           {error && <div className="alert alert-error" role="alert">{error}</div>}
           {notice && <div className="alert alert-success" role="status">{notice}</div>}
           <form className="form-stack" onSubmit={changePassword}>
-            <FormField label="Initial password" name="currentPassword" type="password" autoComplete="current-password" required />
-            <FormField label="New password (at least 12 characters)" name="newPassword" type="password" autoComplete="new-password" minLength={12} required />
-            <FormField label="Confirm new password" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} required />
+            <PhaseField label="Initial password" name="currentPassword" type="password" autoComplete="current-password" required />
+            <PhaseField label="New password (at least 12 characters)" name="newPassword" type="password" autoComplete="new-password" minLength={12} required />
+            <PhaseField label="Confirm new password" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} required />
             <button className="button button-primary button-full" type="submit">Update password <span aria-hidden="true">→</span></button>
           </form>
           <p className="auth-toggle"><button type="button" onClick={() => void onSignOut()}>Sign out</button></p>
@@ -1028,6 +1028,7 @@ function PhaseField({
   name,
   type = "text",
   placeholder,
+  autoComplete,
   required = false,
   defaultValue,
   minLength,
@@ -1038,6 +1039,7 @@ function PhaseField({
   name: string;
   type?: string;
   placeholder?: string;
+  autoComplete?: string;
   required?: boolean;
   defaultValue?: string;
   minLength?: number;
@@ -1048,6 +1050,7 @@ function PhaseField({
     name={name}
     type={type}
     placeholder={placeholder}
+    autoComplete={autoComplete}
     required={required}
     defaultValue={defaultValue}
     minLength={minLength}

@@ -501,7 +501,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .welcome-feature-card h3 { margin: 19px 0 8px; color: #143024; font: 600 22px/1.2 Georgia, "Times New Roman", serif; }
 .welcome-feature-card p { margin: 0; font-size: 14px; }
 .welcome-disclaimer { margin: 26px 0 0; padding: 16px 18px; border-left: 3px solid #c77414; border-radius: 0 10px 10px 0; color: #514a3f; background: #fbf4e8; font-size: 13px; line-height: 1.6; }
-.welcome-error { position: fixed; z-index: 5; top: 12px; left: 50%; width: min(600px, calc(100% - 24px)); transform: translateX(-50%); padding: 13px 16px; border: 1px solid #efb3a8; border-radius: 10px; color: #8b453e; background: #fff0ed; box-shadow: 0 10px 24px rgba(41,36,28,.2); font-size: 14px; }
+.welcome-error { position: fixed; z-index: 5; top: 12px; left: 50%; width: min(600px, calc(100% - 24px)); transform: translateX(-50%); padding: 13px 16px; border: 1px solid #efb3a8; border-radius: 10px; color: #8b453e; background: #fff0ed; box-shadow: 0 10px 24px rgba(41,36,28,.2); font-size: 14px; pointer-events: none; }
 .loading-screen .brand-symbol { width: 42px; height: 42px; color: #bc5531; }
 
 .auth-layout { background: #faf6ec; }
