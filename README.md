@@ -4,7 +4,7 @@
 
 AgriHerd is a technology-driven livestock management platform designed to help farmers improve animal health monitoring, organise livestock records, access professional agricultural extension services, and make informed animal nutrition decisions.
 
-The project initially focuses on **dairy livestock management**, with a modular design intended to support beef livestock management in future releases.
+The initial release supports **beef and dairy cattle records**. Production-specific dairy and beef workflows can be added in later phases.
 
 ## Problem Statement
 
@@ -85,57 +85,42 @@ The initial deployment will target dairy farming in Kenya, subject to validation
 
 ## Project Scope
 
-### Phase 1: Dairy Livestock Management
+### Phase 1: Foundation
 
-The initial release will focus on:
+- React application shell and Express REST API.
+- Prisma/PostgreSQL schema and migrations.
+- Farmer sign-in, farm profiles, and farm-scoped role checks.
+- Beef and dairy cattle registration with searchable profiles.
 
-- Farmer and farm management.
-- Animal registration and digital profiles.
-- Animal health and treatment records.
-- Milk production tracking.
-- Feed inventory and nutrition information.
-- Agricultural extension service requests.
-- Reminders, alerts, and basic reports.
+**Exit outcome:** A farmer can securely create a farm and register cattle.
 
-### Phase 2: Intelligence and Integrations
+### Phase 2: Health and Records
 
-Potential future enhancements include:
+- Animal timelines and health observations.
+- Care/treatment records and follow-up dates.
+- A basic dashboard that distinguishes farmer observations from professional entries.
 
-- More advanced livestock health and production trend analysis.
-- Offline data capture and synchronisation.
-- SMS notifications.
-- QR-code-based animal identification.
-- Integration with suitable livestock monitoring devices.
-- Improved feeding and farm performance analytics.
+### Phase 3: Nutrition and Extension
 
-These features will be prioritised based on user needs, available data, validation, and implementation resources.
+- Feed records and professionally reviewed nutrition guidance.
+- Extension directory, support requests, and professional status updates.
 
-### Phase 3: Beef Livestock Management
+### Phase 4: MVP Hardening and Pilot
 
-The platform is intended to expand to beef livestock management, potentially including:
+- Validation, access review, basic reports, backup/recovery procedures, usability improvements, and pilot feedback.
 
-- Weight and growth tracking.
-- Weight-gain analysis.
-- Grazing and feedlot management.
-- Beef cattle breeding records.
-- Livestock sales and market records.
-- Cost and profitability analysis.
+Advanced analytics, offline synchronisation, SMS, sensors, integrations, and detailed dairy-production or beef-growth workflows remain later-release candidates.
 
-Beef-specific functionality will be developed separately where dairy and beef workflows differ.
+## Technology Stack
 
-## Proposed Technology Stack
-
-The final technology stack will be confirmed during project setup.
-
-Potential technologies include:
-
-| Component | Proposed Technology |
+| Component | Technology |
 |---|---|
 | Frontend | React with Vite |
 | Backend | Node.js and Express.js |
+| Data access and migrations | Prisma |
 | Database | PostgreSQL |
-| API | REST API |
-| Authentication | Secure, role-based authentication |
+| API | Versioned REST API at `/api/v1` |
+| Authentication | Email/password with hashed credentials and HTTP-only sessions |
 | Version Control | Git and GitHub |
 | Deployment | To be determined |
 
@@ -157,20 +142,37 @@ AgriHerd will be organised around the following modules:
 
 ## Getting Started
 
-Setup instructions will be added as the project implementation progresses.
-
 ### Prerequisites
 
-The requirements will depend on the final technology stack. For the proposed stack, developers will typically need:
-
-- Node.js and npm.
+- Node.js 20 or later and npm 10 or later.
 - PostgreSQL.
 - Git.
-- A code editor such as Visual Studio Code.
 
 ### Installation
 
-Installation commands, environment configuration, database setup, and development instructions will be documented after the initial project structure is established.
+1. Create a PostgreSQL database for AgriHerd.
+2. Copy `.env.example` to `apps/server/.env` and set `DATABASE_URL` to the database connection string. Keep `.env` private.
+3. Install dependencies and prepare the database:
+
+   ```powershell
+   npm install
+   npm run db:generate
+   npm run db:migrate
+   ```
+
+4. Start the web client and API:
+
+   ```powershell
+   npm run dev
+   ```
+
+5. Open `http://localhost:5173` and create a farmer account.
+
+The API listens on `127.0.0.1:4000` by default; Vite proxies API calls to it. For a production deployment, configure the host, trusted proxy, HTTPS, and `WEB_ORIGIN` for the actual deployment environment.
+
+To provision an administrator account, set `SEED_ADMIN_EMAIL`, `SEED_ADMIN_NAME`, and a unique `SEED_ADMIN_PASSWORD` in `apps/server/.env`, then run `npm run db:seed-admin`. Public registration always creates farmer accounts; users cannot grant themselves professional or administrator access.
+
+Run the focused server validation tests with `npm test`. Build both applications with `npm run build`.
 
 Do not commit credentials, database passwords, API keys, or other secrets to the repository.
 
@@ -189,9 +191,9 @@ AgriHerd will follow these principles:
 
 ## Project Status
 
-**Status:** Requirements definition and initial development planning.
+**Status:** Phase 1 foundation implementation started.
 
-The project is being developed incrementally, beginning with dairy livestock management. Features will be documented as they are implemented and tested.
+The first implementation slice includes account registration/sign-in, farm profiles, farm-scoped access checks, audit entries for farm and animal changes, and cattle registration for beef or dairy. Health records, feed/nutrition, extension workflows, and production features remain planned for later phases. The Phase 1 exit outcome still requires database-backed execution and verification in a configured development environment.
 
 ## Contributing
 
@@ -210,19 +212,17 @@ Detailed contribution guidelines and branch conventions will be added as the tea
 
 ## Roadmap
 
-- [ ] Finalise and validate system requirements.
-- [ ] Design the system architecture and database schema.
-- [ ] Establish the project structure and development environment.
-- [ ] Implement authentication and farm management.
-- [ ] Implement animal registration and digital records.
+- [x] Establish the Phase 1 project structure, API, database schema, and initial migration.
+- [x] Implement farmer registration/sign-in, farm management, and farm membership checks.
+- [x] Implement beef/dairy cattle registration and farm-scoped search.
 - [ ] Implement health monitoring and follow-up records.
 - [ ] Implement dairy production tracking.
 - [ ] Implement feed inventory and reviewed nutrition resources.
 - [ ] Implement extension service requests.
 - [ ] Add reminders, alerts, and reports.
 - [ ] Test the system with representative users.
-- [ ] Pilot the dairy management module.
-- [ ] Evaluate requirements for beef livestock expansion.
+- [ ] Pilot the cattle management module.
+- [ ] Evaluate further dairy and beef workflows.
 
 ## Vision
 

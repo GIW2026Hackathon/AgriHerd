@@ -1,0 +1,23 @@
+{
+  "name": "agriherd",
+  "private": true,
+  "workspaces": [
+    "apps/server",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c green,cyan \"npm run dev --workspace @agriherd/server\" \"npm run dev --workspace @agriherd/web\"",
+    "build": "npm run build --workspace @agriherd/server && npm run build --workspace @agriherd/web",
+    "test": "npm run test --workspace @agriherd/server",
+    "db:generate": "npm run db:generate --workspace @agriherd/server",
+    "db:migrate": "npm run db:migrate --workspace @agriherd/server",
+    "db:seed-admin": "npm run db:seed-admin --workspace @agriherd/server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
