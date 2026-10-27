@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-pine-950: #081f16;
+  --color-pine-900: #0d2b20;
+  --color-pine-850: #103325;
+  --color-pine-800: #154231;
+  --color-pine-700: #1c5740;
+  --color-pine-600: #256c4f;
+  --color-pine-500: #2f8260;
+  --color-pine-100: #e3ede4;
+  --color-pine-50:  #eef4ec;
+
+  --color-cream-50:  #faf8ef;
+  --color-cream-100: #f4f1e4;
+  --color-cream-200: #e9e5d3;
+  --color-cream-300: #d9d4bd;
+
+  --color-gold-300: #ecc36b;
+  --color-gold-400: #e0a83e;
+  --color-gold-500: #cf8f22;
+  --color-gold-600: #a96c15;
+
+  --color-clay-500: #c2410c;
+  --color-clay-600: #9a3412;
+
+  --shadow-card: 0 1px 2px rgb(13 43 32 / .06), 0 8px 24px rgb(13 43 32 / .08);
+  --shadow-lift: 0 2px 4px rgb(13 43 32 / .1), 0 16px 40px rgb(13 43 32 / .18);
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--color-cream-50); }
+
+::selection { background: var(--color-gold-300); color: var(--color-pine-950); }
+
+/* subtle topographic grain for hero / marketing surfaces */
+.terrain-bg {
+  background-color: var(--color-pine-950);
+  background-image:
+    radial-gradient(1200px 500px at 15% -10%, rgb(47 130 96 / .35), transparent 60%),
+    radial-gradient(900px 500px at 110% 20%, rgb(224 168 62 / .14), transparent 55%),
+    radial-gradient(700px 600px at 50% 120%, rgb(28 87 64 / .4), transparent 60%);
+}
+.card-surface {
+  background: #ffffff;
+  border: 1px solid var(--color-cream-200);
+  box-shadow: var(--shadow-card);
+}
+.input-field {
+  width: 100%;
+  border-radius: 0.65rem;
+  border: 1px solid var(--color-cream-300);
+  background: #fffdf6;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-pine-950);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.input-field:focus { border-color: var(--color-pine-600); box-shadow: 0 0 0 3px rgb(37 108 79 / .18); }
+.input-field::placeholder { color: #a3a08c; }
+.label-caps { font-size: .68rem; letter-spacing: .09em; text-transform: uppercase; font-weight: 600; color: #6f6b55; }
+
+.scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-cream-300); border-radius: 8px; }
+
+@keyframes ping-ring { 0% { transform: scale(.9); opacity: .7 } 80%, 100% { transform: scale(2.1); opacity: 0 } }
+.ping-ring { animation: ping-ring 2.4s cubic-bezier(0,0,.2,1) infinite; }
+
+@keyframes shimmer { 0% { background-position: -400px 0 } 100% { background-position: 400px 0 } }
+.skeleton { background: linear-gradient(90deg, var(--color-cream-100) 25%, var(--color-cream-50) 50%, var(--color-cream-100) 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite; }
+
+/* Print: only the report surface prints */
+@media print {
+  body { background: #fff; }
+  .no-print, aside, header, .print-hidden { display: none !important; }
+  .print-surface { box-shadow: none !important; border: none !important; }
+  main { padding: 0 !important; }
+}
