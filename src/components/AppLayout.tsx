@@ -115,7 +115,7 @@ export default function AppLayout() {
           <button onClick={() => { resetDemoData(); toast('Demo data reset', { body: 'Seeded dataset rebuilt.', tone: 'info' }); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-medium text-cream-100/55 hover:bg-white/5 hover:text-cream-100">
             <RefreshCw className="h-4 w-4" /> Reset demo dataset
           </button>
-          <button onClick={() => { signOut(); navigate('/login'); }} className="mt-0.5 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-medium text-cream-100/55 hover:bg-white/5 hover:text-cream-100">
+          <button onClick={() => { navigate('/login', { replace: true }); signOut(); }} className="mt-0.5 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-medium text-cream-100/55 hover:bg-white/5 hover:text-cream-100">
             <LogOut className="h-4 w-4" /> Sign out
           </button>
         </div>

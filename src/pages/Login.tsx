@@ -33,7 +33,12 @@ export default function Login() {
 
   const from = (location.state as { from?: string } | null)?.from;
 
-  useEffect(() => { if (isAuthenticated) navigate(from ?? `/app/${role}`, { replace: true }); }, [isAuthenticated, role, from, navigate]);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const rolePath = `/app/${role}`;
+    const destination = from === rolePath || from?.startsWith(`${rolePath}/`) ? from : rolePath;
+    navigate(destination, { replace: true });
+  }, [isAuthenticated, role, from, navigate]);
 
   const submit = () => {
     if (password !== DEMO_PASSWORD) {
@@ -44,7 +49,11 @@ export default function Login() {
     window.setTimeout(() => {
       signIn(selected);
       toast('Signed in', { body: `Welcome back — session started as ${selected}.`, tone: 'success' });
-      navigate(from ?? `/app/${selected}`, { replace: true });
+      const selectedRolePath = `/app/${selected}`;
+      const destination = from === selectedRolePath || from?.startsWith(`${selectedRolePath}/`)
+        ? from
+        : selectedRolePath;
+      navigate(destination, { replace: true });
     }, 650);
   };
 
