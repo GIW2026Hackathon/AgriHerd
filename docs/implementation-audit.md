@@ -1,4 +1,4 @@
-# Gusii HerdCare implementation audit
+# DairyHub implementation audit
 
 Date: 2026-10-27
 

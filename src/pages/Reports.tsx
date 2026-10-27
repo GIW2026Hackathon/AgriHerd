@@ -91,7 +91,7 @@ export default function Reports() {
             <div className="flex items-center gap-3">
               {role === 'county' || report === 'county-surveillance' ? <Landmark className="h-8 w-8 text-gold-400" /> : <Building2 className="h-8 w-8 text-gold-400" />}
               <div>
-                <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-gold-300">Gusii Livestock Health &amp; Value Chain Intelligence System</p>
+                <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-gold-300">DairyHub Health &amp; Value Chain Intelligence System</p>
                 <h2 className="font-display text-xl font-semibold text-cream-50">{active.title}</h2>
                 <p className="text-[10.5px] text-cream-100/60">{active.owner}</p>
               </div>

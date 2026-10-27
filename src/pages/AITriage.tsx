@@ -25,24 +25,47 @@ export default function AITriage() {
   const [language, setLanguage] = useState<FeedbackLanguage>('sw');
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  const recognitionRef = useRef<{
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [interimTranscript, setInterimTranscript] = useState('');
+  type SpeechResultEvent = { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> };
+  type SpeechRecognitionLike = {
     start: () => void;
     stop: () => void;
     lang: string;
-    onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+    continuous: boolean;
+    interimResults: boolean;
+    onresult: ((event: SpeechResultEvent) => void) | null;
     onend: (() => void) | null;
     onerror: (() => void) | null;
-  } | null>(null);
+  };
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const listeningRef = useRef(false);
+  const recordingStartedAtRef = useRef<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof screenDescription>['result'] & { farmerExplanation?: string } | null>(null);
   const [logging, setLogging] = useState(false);
 
   useEffect(() => {
     const speech = window as Window & {
-      SpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
-      webkitSpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
     };
     setSpeechSupported(Boolean(speech.SpeechRecognition || speech.webkitSpeechRecognition));
+  }, []);
+
+  useEffect(() => {
+    if (!listening) return;
+    const timer = window.setInterval(() => {
+      if (recordingStartedAtRef.current) {
+        setRecordingSeconds(Math.floor((Date.now() - recordingStartedAtRef.current) / 1000));
+      }
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [listening]);
+
+  useEffect(() => () => {
+    listeningRef.current = false;
+    recognitionRef.current?.stop();
   }, []);
 
   const toggle = (id: SymptomId) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
@@ -61,34 +84,64 @@ export default function AITriage() {
     setBusy(false);
   };
 
-  const toggleVoice = () => {
+  const stopVoice = () => {
+    listeningRef.current = false;
+    setListening(false);
+    setInterimTranscript('');
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+  };
+
+  const startVoice = () => {
     const speech = window as Window & {
-      SpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
-      webkitSpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
     };
     const Recognition = speech.SpeechRecognition || speech.webkitSpeechRecognition;
     if (!Recognition) {
       toast('Voice notes are not supported in this browser', { body: 'Type the description instead, or use Chrome/Edge on a secure connection.', tone: 'warning' });
       return;
     }
-    if (listening) {
-      recognitionRef.current?.stop();
-      return;
-    }
     const recognition = new Recognition();
     recognition.lang = language === 'sw' ? 'sw-KE' : 'en-KE';
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.onresult = (event) => {
-      const transcript = Array.from(event.results).map((item) => item[0].transcript).join(' ');
-      setDescription((current) => `${current} ${transcript}`.trim());
+      let finalText = '';
+      let interimText = '';
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const item = event.results[index];
+        if (item?.[0]?.transcript) {
+          if (item.isFinal) finalText += item[0].transcript;
+          else interimText += item[0].transcript;
+        }
+      }
+      if (finalText) setDescription((current) => `${current} ${finalText}`.trim());
+      setInterimTranscript(interimText);
     };
-    recognition.onend = () => setListening(false);
+    recognition.onend = () => {
+      if (!listeningRef.current) return;
+      window.setTimeout(() => {
+        if (listeningRef.current) {
+          try { recognition.start(); } catch { /* browser is already restarting */ }
+        }
+      }, 150);
+    };
     recognition.onerror = () => {
-      setListening(false);
-      toast('Voice note could not be captured', { body: 'Please check microphone permission and try again.', tone: 'warning' });
+      if (listeningRef.current) toast('Microphone needs attention', { body: 'Keep speaking or check microphone permission. The recording will continue where possible.', tone: 'warning' });
     };
     recognitionRef.current = recognition;
+    listeningRef.current = true;
+    recordingStartedAtRef.current = Date.now();
+    setRecordingSeconds(0);
+    setInterimTranscript('');
     setListening(true);
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      stopVoice();
+      toast('Could not start the microphone', { body: 'Please allow microphone access and try again.', tone: 'warning' });
+    }
   };
 
   // nearest available vet to the farm (Haversine)
@@ -167,11 +220,23 @@ export default function AITriage() {
               </label>
             </div>
             <textarea id="description" value={description} onChange={(event) => setDescription(event.target.value)} className="input-field mt-1.5 min-h-24 resize-y" placeholder="Mfano: Ng'ombe ana homa kali, hakuli, na kupe wameonekana..." />
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <p className="text-[10.5px] text-stone-400">Maneno ya Kiswahili na Kiingereza yanayotambuliwa yataongezwa kwenye dalili.</p>
-              <button type="button" onClick={toggleVoice} disabled={!speechSupported} className={cn('inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold', listening ? 'border-red-300 bg-red-50 text-red-700' : 'border-pine-300 bg-pine-50 text-pine-800', !speechSupported && 'cursor-not-allowed opacity-50')}>
-                {listening ? <Square className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}{listening ? 'Stop recording' : 'Sema / Voice note'}
-              </button>
+            <div className="mt-2 rounded-xl border border-pine-100 bg-pine-50/60 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={cn('flex h-9 w-9 items-center justify-center rounded-full', listening ? 'bg-red-100 text-red-700' : 'bg-pine-100 text-pine-800')}>
+                    <Mic className={cn('h-4 w-4', listening && 'animate-pulse')} />
+                  </span>
+                  <div>
+                    <p className="text-[12px] font-bold text-pine-950">{listening ? `Inarekodi… ${Math.floor(recordingSeconds / 60)}:${String(recordingSeconds % 60).padStart(2, '0')}` : 'Ongea badala ya kuandika'}</p>
+                    <p className="text-[10.5px] text-stone-500">{listening ? 'Endelea kuzungumza. Bonyeza Stop ukimaliza.' : 'Bonyeza mara moja, sema kwa utulivu, kisha bonyeza Stop.'}</p>
+                  </div>
+                </div>
+                <button type="button" onClick={listening ? stopVoice : startVoice} disabled={!speechSupported && !listening} className={cn('inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[12px] font-bold shadow-sm transition sm:min-w-36', listening ? 'border border-red-300 bg-red-600 text-white hover:bg-red-700' : 'bg-pine-800 text-cream-50 hover:bg-pine-700', !speechSupported && !listening && 'cursor-not-allowed opacity-50')}>
+                  {listening ? <><Square className="h-4 w-4" /> Stop</> : <><Mic className="h-4 w-4" /> Anza kusema</>}
+                </button>
+              </div>
+              {interimTranscript && <p className="mt-2 rounded-lg bg-white/80 px-2.5 py-2 text-[11px] italic text-stone-500">“{interimTranscript}”</p>}
+              <p className="mt-2 text-[10px] leading-relaxed text-stone-400">{speechSupported ? 'Unaweza kurekodi kwa muda mrefu; mfumo utaendelea kusikiliza hadi ubonyeze Stop. Maelezo yataonekana kwenye kisanduku hapo juu.' : 'Kivinjari hiki hakitumii kurekodi kwa sauti. Andika maelezo hapo juu au tumia Chrome/Edge.'}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 p-4">

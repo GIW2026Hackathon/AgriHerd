@@ -2,9 +2,9 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Gusii HerdCare status
+## DairyHub status
 
-This repository currently contains a synthetic local demonstration of Gusii HerdCare. It is not a production backend: the UI uses browser-local demo persistence and persona selection. Read the [implementation audit](docs/implementation-audit.md) before configuring real users, providers, payments, or health data.
+This repository currently contains a synthetic local demonstration of DairyHub. It is not a production backend: the UI uses browser-local demo persistence and persona selection. Read the [implementation audit](docs/implementation-audit.md) before configuring real users, providers, payments, or health data.
 
 The PostgreSQL baseline is in [schema.sql](schema.sql). The additional required domain tables and their initial RLS policies are in [migrations/0002_required_domain_entities.sql](migrations/0002_required_domain_entities.sql); apply them only after reviewing and testing the base schema in a disposable database. Use [.env.example](.env.example) as the configuration-name inventory. It contains no secrets.
 

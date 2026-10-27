@@ -71,7 +71,7 @@ export default function Login() {
   return (
     <div className="terrain-bg flex min-h-screen flex-col font-sans text-cream-100">
       <header className="flex h-16 items-center justify-between px-4 sm:px-8">
-        <a href="/" className="flex items-center gap-2.5"><LogoMark small /><span className="font-display text-[15px] font-semibold">Gusii Livestock <span className="text-gold-400">Health</span></span></a>
+        <a href="/" className="flex items-center gap-2.5"><LogoMark small /><span className="font-display text-[15px] font-semibold">Dairy<span className="text-gold-400">Hub</span></span></a>
         <span className="rounded-full border border-gold-400/40 bg-gold-400/10 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-widest text-gold-300">Secure Sign-In</span>
       </header>
 

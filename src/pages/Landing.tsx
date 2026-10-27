@@ -16,7 +16,7 @@ export default function Landing() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5">
             <LogoMark />
-            <span className="font-display text-[17px] font-semibold tracking-tight text-cream-50">Gusii Livestock <span className="text-gold-400">Health</span></span>
+            <span className="font-display text-[17px] font-semibold tracking-tight text-cream-50">Dairy<span className="text-gold-400">Hub</span></span>
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] font-medium text-cream-100/80 md:flex">
             <a href="#platform" className="hover:text-gold-300">Platform</a>
@@ -219,7 +219,7 @@ export default function Landing() {
           <div className="flex items-center gap-2.5">
             <LogoMark small />
             <div className="text-[12px] leading-tight">
-              <p className="font-bold text-cream-100">Gusii Livestock Health &amp; Value Chain Intelligence System</p>
+              <p className="font-bold text-cream-100">DairyHub Health &amp; Value Chain Intelligence System</p>
               <p className="text-cream-100/50">Kisii County Government · Department of Agriculture, Livestock &amp; Fisheries</p>
             </div>
           </div>

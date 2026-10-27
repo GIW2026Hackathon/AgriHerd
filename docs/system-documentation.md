@@ -1,8 +1,8 @@
-# Gusii HerdCare system documentation
+# DairyHub system documentation
 
 ## 1. Purpose and scope
 
-Gusii HerdCare is a role-based livestock-health and value-chain intelligence prototype for Gusii communities in Kisii and Nyamira counties. The current repository is a Vite/React demonstration with synthetic data. It supports exploring farmer, veterinary, sponsor, county, and administrator workflows in one browser.
+DairyHub is a role-based livestock-health and value-chain intelligence prototype for dairy communities in Kisii and Nyamira counties. The current repository is a Vite/React demonstration with synthetic data. It supports exploring farmer, veterinary, sponsor, county, and administrator workflows in one browser.
 
 It is not currently a production clinical, public-health, identity, or payment system.
 

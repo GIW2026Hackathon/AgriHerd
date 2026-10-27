@@ -76,7 +76,7 @@ export default function AppLayout() {
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
           <Link to="/" className="flex items-center gap-2">
             <LogoMark small />
-            <span className="font-display text-[13px] font-semibold leading-tight text-cream-50">Gusii Livestock<br /><span className="text-gold-400">Health Platform</span></span>
+            <span className="font-display text-[13px] font-semibold leading-tight text-cream-50">Dairy<span className="text-gold-400">Hub</span><br /><span className="text-gold-400">Health Platform</span></span>
           </Link>
           <button className="rounded-lg p-1.5 hover:bg-white/10 lg:hidden" onClick={() => setSideOpen(false)} aria-label="Close sidebar"><X className="h-5 w-5" /></button>
         </div>
@@ -131,7 +131,7 @@ export default function AppLayout() {
           {/* command-bar style context */}
           <div className="hidden min-w-0 flex-col md:flex">
             <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-stone-500">Kisii · Nyamira Cluster — 26 Oct 2026</span>
-            <span className="truncate font-display text-[13px] font-semibold text-pine-950">Gusii Livestock Health &amp; Value Chain Intelligence</span>
+            <span className="truncate font-display text-[13px] font-semibold text-pine-950">DairyHub Health &amp; Value Chain Intelligence</span>
           </div>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
