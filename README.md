@@ -14,12 +14,17 @@ The PostgreSQL baseline is in [schema.sql](schema.sql). The additional required 
 - [Implementation audit](docs/implementation-audit.md): confirmed current-state findings and prioritized production work.
 - [Test report](docs/test-report.md): commands run, build/lint/browser results, and remaining coverage.
 - [Architecture notes](architecture.md): original prototype architecture reference.
+- [Render deployment guide](docs/render-deployment.md): deploy the current frontend and understand the database boundary.
 
 ### Environment variables
 
 The active database configuration is one server-side variable: `DATABASE_URL`. Set it in the ignored `.env` file, for example `postgresql://postgres:password@localhost:5432/agriherd`. Run `npm run db:health` to verify connectivity and `npm run db:migrate` to apply the SQL files. Never expose `DATABASE_URL` through `VITE_*` variables.
 
 The SQL schema expects PostgreSQL extensions and Supabase-compatible auth objects. For local development, a local Supabase stack is the safest option; plain PostgreSQL requires equivalent extensions and auth compatibility objects.
+
+### Render deployment
+
+This repository includes [render.yaml](render.yaml) for the current Vite static site. Render builds `dist/` with `npm ci && npm run build`; it does not receive `DATABASE_URL` because the current browser app must not connect directly to PostgreSQL. Follow the [Render deployment guide](docs/render-deployment.md).
 
 Currently, two official plugins are available:
 
