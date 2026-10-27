@@ -25,6 +25,8 @@ export default function Login() {
   const [selected, setSelected] = useState<Role>('farmer');
   const [password, setPassword] = useState('demo2026');
   const [showPw, setShowPw] = useState(false);
+  const [showAccountPassword, setShowAccountPassword] = useState(false);
+  const [showAccountConfirmPassword, setShowAccountConfirmPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [createMode, setCreateMode] = useState(false);
   const [account, setAccount] = useState({ name: '', phone: '', email: '', role: 'farmer' as 'farmer' | 'vet', password: '', confirmPassword: '', consent: false });
@@ -149,11 +151,21 @@ export default function Login() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor="account-password" className="label-caps !text-gold-300/90">Password <span className="text-red-300">*</span></label>
-                  <input id="account-password" required type="password" minLength={8} value={account.password} onChange={(e) => setAccount((current) => ({ ...current, password: e.target.value }))} className="input-field mt-1.5 border-white/15 !bg-white/10 !text-cream-100" autoComplete="new-password" />
+                  <div className="relative mt-1.5">
+                    <input id="account-password" required type={showAccountPassword ? 'text' : 'password'} minLength={8} value={account.password} onChange={(e) => setAccount((current) => ({ ...current, password: e.target.value }))} className="input-field border-white/15 !bg-white/10 pr-11 !text-cream-100" autoComplete="new-password" />
+                    <button type="button" onClick={() => setShowAccountPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 text-cream-100/50 hover:text-cream-100" aria-label={showAccountPassword ? 'Hide account password' : 'Show account password'}>
+                      {showAccountPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="account-confirm" className="label-caps !text-gold-300/90">Confirm password <span className="text-red-300">*</span></label>
-                  <input id="account-confirm" required type="password" minLength={8} value={account.confirmPassword} onChange={(e) => setAccount((current) => ({ ...current, confirmPassword: e.target.value }))} className="input-field mt-1.5 border-white/15 !bg-white/10 !text-cream-100" autoComplete="new-password" />
+                  <div className="relative mt-1.5">
+                    <input id="account-confirm" required type={showAccountConfirmPassword ? 'text' : 'password'} minLength={8} value={account.confirmPassword} onChange={(e) => setAccount((current) => ({ ...current, confirmPassword: e.target.value }))} className="input-field border-white/15 !bg-white/10 pr-11 !text-cream-100" autoComplete="new-password" />
+                    <button type="button" onClick={() => setShowAccountConfirmPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 text-cream-100/50 hover:text-cream-100" aria-label={showAccountConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}>
+                      {showAccountConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
               <label className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 p-3 text-[11px] leading-relaxed text-cream-100/65">
