@@ -15,6 +15,12 @@ The PostgreSQL baseline is in [schema.sql](schema.sql). The additional required 
 - [Test report](docs/test-report.md): commands run, build/lint/browser results, and remaining coverage.
 - [Architecture notes](architecture.md): original prototype architecture reference.
 
+### Environment variables
+
+The active database configuration is one server-side variable: `DATABASE_URL`. Set it in the ignored `.env` file, for example `postgresql://postgres:password@localhost:5432/agriherd`. Run `npm run db:health` to verify connectivity and `npm run db:migrate` to apply the SQL files. Never expose `DATABASE_URL` through `VITE_*` variables.
+
+The SQL schema expects PostgreSQL extensions and Supabase-compatible auth objects. For local development, a local Supabase stack is the safest option; plain PostgreSQL requires equivalent extensions and auth compatibility objects.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh

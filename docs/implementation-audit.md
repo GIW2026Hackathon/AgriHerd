@@ -39,6 +39,7 @@ No real users, providers, payments, outbreaks, or operational statistics should 
 8. **No automated test suite is configured.** `package.json` has build/lint scripts but no unit, integration, or end-to-end test runner.
 9. **No environment-variable contract exists.** There is no `.env.example` describing database, auth, storage, AI, notification, or payment configuration.
 10. **Seeded provider and programme data is synthetic.** The product must not present it as verified real-world provider availability or sponsor coverage.
+11. **The environment template previously documented the wrong AI variable.** The frontend reads `VITE_AI_GATEWAY_KEY`; `AI_PROVIDER_API_KEY` is reserved for a future server-side integration and is not read by the current app.
 
 ## Database and authorization gaps
 

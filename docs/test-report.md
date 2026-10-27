@@ -66,3 +66,28 @@ The repository still needs:
 No real payments or external notification calls should be used in automated tests.
 
 The new tests are intentionally limited to the local repository because no Supabase project, authenticated test identities, storage bucket, payment sandbox, or notification provider is available in this environment.
+
+## Database verification status
+
+PostgreSQL connectivity, migration execution, and RLS tests were not run. The project currently has no database client or server API, and no safe confirmed staging credentials were provided for use. The SQL files therefore remain unverified against a live PostgreSQL/Supabase instance.
+
+To complete this phase, the owner must provide a disposable/staging Supabase project, configure credentials locally in ignored `.env` files, approve the migration run, and create separate test identities for all five roles. Service-role credentials must never be pasted into chat or committed.
+
+### Latest connectivity retry
+
+The local `.env` was checked without printing secret values:
+
+- Supabase URL variable: present.
+- Supabase public-key variable: present, but the REST request returned HTTP `401 Unauthorized`.
+- Direct PostgreSQL client: not available (`psql` not installed).
+- Direct TCP connection to the configured PostgreSQL host/port: unreachable.
+- Local repository tests: 6 passed.
+- Production build: passed.
+
+This indicates that the current key/URL configuration is not usable for authenticated Supabase access, and direct database access is unavailable from this machine. Verify the project URL and anon key in the Supabase dashboard, check database network restrictions, and install/configure the PostgreSQL client or use the Supabase SQL editor for migrations.
+
+## Environment-variable verification
+
+The active environment contract is now one variable: `DATABASE_URL`. The environment template and local `.env` were reduced to that variable. `DATABASE_URL` is consumed only by the server-side `db:health` and `db:migrate` scripts; it is not exposed to the browser.
+
+`npm run db:health` was executed after the refactor and correctly stopped with `DATABASE_URL is required` because the local `.env` intentionally contains a blank placeholder. No database connection was attempted. Populate it with a local/staging connection string before running the command.

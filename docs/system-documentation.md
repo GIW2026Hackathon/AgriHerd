@@ -168,21 +168,51 @@ The browser demo stores data locally. To reset it, use the application's demo-da
 
 ## 8. Configuration
 
-Use [.env.example](../.env.example) as the variable-name inventory. Do not put service-role keys, database passwords, AI keys, SMS secrets, or payment secrets in `VITE_*` variables.
+Use [.env.example](../.env.example) as the variable-name inventory. The system now uses one configuration variable for PostgreSQL: `DATABASE_URL`. Keep it server-side; never put it in a `VITE_*` variable.
 
-Current configuration is documentation-only. The frontend does not yet consume Supabase credentials.
+The repository ignores `.env` and `.env.*` files except `.env.example`. The checked-in template contains blank placeholders only. If a real credential has ever been placed in a tracked file, pasted into chat, or shared in a screenshot, revoke and rotate it before continuing.
+
+The browser continues using the local demo repository. The server-side PostgreSQL scripts use only `DATABASE_URL`; the browser never receives this value.
+
+The optional browser AI gateway integration has been removed from the active environment contract. The deterministic triage engine remains available without credentials.
 
 ## 9. Database deployment
 
-1. Provision a disposable PostgreSQL/Supabase project.
-2. Review and apply `schema.sql`.
-3. Review and apply `migrations/0002_required_domain_entities.sql`.
-4. Run RLS tests with separate farmer, vet, sponsor, county, and admin identities.
-5. Add a versioned migration runner before applying changes to shared environments.
-6. Back up the database before production migrations.
-7. Do not apply synthetic seed data to a production tenant.
+1. Provision a local PostgreSQL database or disposable PostgreSQL/Supabase project.
+2. Set one local server-side variable in `.env`:
+   `DATABASE_URL=postgresql://user:password@host:5432/agriherd`
+3. Run `npm run db:health`.
+4. Review and apply `schema.sql` and `migrations/0002_required_domain_entities.sql` with `npm run db:migrate`.
+5. Run RLS tests with separate farmer, vet, sponsor, county, and admin identities.
+6. Add a versioned migration runner before applying changes to shared environments.
+7. Back up the database before production migrations.
+8. Do not apply synthetic seed data to a production tenant.
+
+Available database commands:
+
+- `npm run db:health`: connects and reports the database/user without exposing the connection string.
+- `npm run db:migrate`: applies the baseline and ordered SQL migrations and records applied filenames in `public._agriherd_migrations`.
 
 The current SQL contains an initial RLS design, not a completed production authorization review.
+
+### Database verification status
+
+The repository now includes server-side `db:health` and `db:migrate` scripts that read only `DATABASE_URL`. The browser still uses the local demo repository until a server API is implemented; a PostgreSQL connection string cannot be used directly from browser code.
+
+The SQL baseline targets Supabase/PostgreSQL and requires `pgcrypto`, `pg_trgm`, PostGIS, and Supabase-compatible `auth.users`, `auth.uid()`, and `auth.jwt()` objects. For a plain local PostgreSQL installation, use a local Supabase stack or provision those extensions and compatibility objects before running the migration. The connection-string contract remains the same.
+
+To complete database verification, provide the items in the setup checklist below, then run the migrations against a disposable Supabase project first. Never send service-role keys through chat.
+
+### Setup checklist needed from the project owner
+
+1. Confirm the database is local/disposable or provide approval for staging.
+2. Set only `DATABASE_URL` in the ignored `.env` file.
+3. Confirm whether PostGIS and `pg_trgm` are enabled or permitted.
+4. Create test identities for farmer, vet, sponsor, county, and admin roles.
+5. Confirm the JWT role-claim strategy used by `current_role()` when using Supabase.
+6. Approve applying both SQL files to staging.
+7. Provide the expected organization/farm-link test cases and whether synthetic seed data may be loaded.
+8. Confirm backup and rollback ownership before any shared-environment migration.
 
 ## 10. Security and privacy requirements
 
