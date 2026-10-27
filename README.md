@@ -1,101 +1,114 @@
-# React + TypeScript + Vite
+# DairyHub
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+DairyHub is a role-based livestock health and dairy value-chain prototype for farming communities in Kisii and Nyamira, Kenya. It brings farm and animal records, veterinary case workflows, preliminary disease screening, sponsor claims, and county surveillance into one demonstration application.
 
-## DairyHub status
+> **Prototype notice:** DairyHub currently runs on synthetic data and browser-local storage. Sign-in is a demo persona selector, not identity verification. Do not use it to manage real animal-health records, make clinical decisions, verify payments, or monitor real outbreaks.
 
-This repository currently contains a synthetic local demonstration of DairyHub. It is not a production backend: the UI uses browser-local demo persistence and persona selection. Read the [implementation audit](docs/implementation-audit.md) before configuring real users, providers, payments, or health data.
+## What you can explore
 
-The PostgreSQL baseline is in [schema.sql](schema.sql). The additional required domain tables and their initial RLS policies are in [migrations/0002_required_domain_entities.sql](migrations/0002_required_domain_entities.sql); apply them only after reviewing and testing the base schema in a disposable database. Use [.env.example](.env.example) as the configuration-name inventory. It contains no secrets.
+The demo provides role-specific dashboards for:
 
-## Documentation
+- **Farmers** — farm and animal registry, case reporting, preliminary triage, herd-health reminders, and claims.
+- **Veterinary officers** — case review, treatment notes, withdrawal-period tracking, and claim recommendations.
+- **Sponsors and cooperatives** — linked farms, funding pools, claim review, and reports.
+- **County authorities** — surveillance alerts, county reports, claims, and audit history.
+- **Platform administrators** — user, platform, report, and audit views.
 
-- [System documentation](docs/system-documentation.md): architecture, roles, routes, workflows, data model, configuration, deployment, security, and limitations.
-- [Implementation audit](docs/implementation-audit.md): confirmed current-state findings and prioritized production work.
-- [Test report](docs/test-report.md): commands run, build/lint/browser results, and remaining coverage.
-- [Architecture notes](architecture.md): original prototype architecture reference.
-- [Render deployment guide](docs/render-deployment.md): deploy the current frontend and understand the database boundary.
+Other areas include a veterinary directory, case timelines, notifications, and audit records. The seeded people, farms, providers, metrics, and payment references are fictional demonstration data.
 
-### Environment variables
+## Technology
 
-The active database configuration is one server-side variable: `DATABASE_URL`. Set it in the ignored `.env` file, for example `postgresql://postgres:password@localhost:5432/agriherd`. Run `npm run db:health` to verify connectivity and `npm run db:migrate` to apply the SQL files. Never expose `DATABASE_URL` through `VITE_*` variables.
+- React 19, TypeScript, and Vite
+- React Router with hash-based routes
+- Tailwind CSS and Framer Motion
+- Vitest and jsdom for unit tests
+- Optional Node.js HTTP service for AI-assisted triage
+- PostgreSQL schema and migration scripts for future backend work
 
-The SQL schema expects PostgreSQL extensions and Supabase-compatible auth objects. For local development, a local Supabase stack is the safest option; plain PostgreSQL requires equivalent extensions and auth compatibility objects.
+## Get started
 
-### AI API integration
+### Requirements
 
-The local API runs with `npm run start:server` and exposes `/api/ai/health` and `/api/ai/triage`. The Gemini key is server-only. Configure `VITE_API_BASE_URL` for the frontend and `GEMINI_API_KEY`, `GEMINI_MODEL`, and `FRONTEND_ORIGIN` for the API using [.env.example](.env.example).
+- Node.js 20.19+ or 22.12+
+- npm
 
-### Render deployment
+### Install and run the web app
 
-This repository includes [render.yaml](render.yaml) for the current Vite static site. Render builds `dist/` with `npm ci && npm run build`; it does not receive `DATABASE_URL` because the current browser app must not connect directly to PostgreSQL. Follow the [Render deployment guide](docs/render-deployment.md).
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open the local URL printed by Vite (normally `http://localhost:5173`). The frontend works without an API or database: triage uses its built-in deterministic screening engine, and demo records are stored in the browser.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Sign in to the demo
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Open **Sign in** and choose a persona: Farmer, Veterinary Officer, Sponsor / Co-op, County Authority, or Platform Admin.
+2. Use the demo password: `demo2026`.
+3. Explore the role dashboard and switch personas by signing out and selecting another role.
+
+The sign-in and account creation screens are demonstrations only; they do not create or authenticate real accounts.
+
+## AI triage API (optional)
+
+The triage workflow always has a local, deterministic rules-based screen. To enable optional AI-generated explanations, run the companion API with a server-side Gemini key:
+
+1. Copy `.env.example` to `.env`.
+2. Set `GEMINI_API_KEY` and, if needed, `GEMINI_MODEL`.
+3. Keep `VITE_API_BASE_URL` pointed at the API (the template uses `http://localhost:8787`).
+4. Start the API and frontend in separate terminals:
+
+```bash
+npm run start:server
+npm run dev
 ```
+
+The API exposes `GET /api/ai/health` and `POST /api/ai/triage`. Without a configured provider or if the provider is unavailable, the API returns a deterministic fallback. Never put Gemini credentials in a `VITE_*` variable or commit them. AI triage is preliminary information, not a diagnosis or substitute for veterinary care.
+
+## Data and database boundary
+
+- The application repository persists demo data in browser `localStorage` (`glhvis.db.v1`); the demo session is kept in `sessionStorage`.
+- Data is local to the browser and is not shared across users or devices. Clearing the browser's site data resets the demo.
+- `DATABASE_URL` is used only by the server-side database health and migration scripts. The web application does not currently read or write its records through PostgreSQL.
+- The SQL schema and migration are starting points, not a production-ready database deployment. They require a compatible PostgreSQL/Supabase setup and review before use.
+
+To check or apply the SQL using an explicitly configured local or disposable database:
+
+```bash
+npm run db:health
+npm run db:migrate
+```
+
+Set `DATABASE_URL` in the local `.env` file first. Review the SQL and use a disposable or staging database; do not run migrations against production without an approved backup and migration plan.
+
+## Useful commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Type-check and create the production frontend build in `dist/` |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run the Vitest suite |
+| `npm run start:server` | Start the optional AI triage API |
+| `npm run db:health` | Check `DATABASE_URL` connectivity |
+| `npm run db:migrate` | Apply the baseline schema and ordered SQL migrations |
+
+## Deployment
+
+The frontend can be built as a static Vite site. The repository includes a Render blueprint in [`render.yaml`](render.yaml) for a static frontend and the optional Node.js AI API. Configure frontend and API environment variables only for the services that need them; keep `GEMINI_API_KEY` and `DATABASE_URL` server-side.
+
+Deployment does not turn the local demo repository into a production backend. The browser data remains local, and the API currently serves AI triage only. See the [Render deployment guide](docs/render-deployment.md) before deploying.
+
+## Project documentation
+
+- [System documentation](docs/system-documentation.md) — architecture, roles, routes, data model, and current limitations.
+- [Implementation audit](docs/implementation-audit.md) — current-state findings and production-readiness gaps.
+- [Test report](docs/test-report.md) — recorded validation results and remaining test coverage.
+- [Architecture notes](architecture.md) — prototype architecture reference.
+- [Database schema](schema.sql) and [domain migration](migrations/0002_required_domain_entities.sql).
+- [AI API notes](server/README.md).
+
+## Production readiness
+
+DairyHub is a prototype, not a production clinical, identity, payment, or public-health system. Before real-world use, it needs authenticated accounts, server-enforced authorization, a connected and tested backend, private storage, verified provider and payment integrations, operational monitoring, and appropriate veterinary, privacy, and security reviews. See the [implementation audit](docs/implementation-audit.md) for a fuller list.
