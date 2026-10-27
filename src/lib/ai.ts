@@ -5,7 +5,7 @@
  *   1. deterministic_rules — always available. Weighted veterinary
  *      symptom→disease matrix grounded in OIE/FAO dairy-cattle protocols
  *      for the East African highlands. Zero network dependency.
- *   2. gemini — requested through the server-side AgriHerd API. The browser
+ *   2. gemini — requested through the server-side DairyHub API. The browser
  *      never receives the Gemini key and falls back to the local result.
  *
  * Red-flag override: downer cow + high fever, neuro signs, epistaxis, or
@@ -303,34 +303,4 @@ export function screenAnimal(selected: SymptomId[]): ScreeningResult {
     : 'routine';
 
   return { differential, urgency, engine: 'deterministic_rules' };
-}
-
-/** Optional LLM enrichment via Vercel AI SDK-compatible chat endpoint.
- *  Only runs when VITE_AI_GATEWAY_KEY is configured — otherwise the
- *  deterministic engine result stands alone. Never fabricates output. */
-export async function enrichWithLLM(symptoms: SymptomId[], result: ScreeningResult): Promise<ScreeningResult> {
-  const key = (import.meta as unknown as { env: Record<string, string | undefined> }).env?.VITE_AI_GATEWAY_KEY;
-  if (!key) return result; // no key → deterministic engine only (honest behaviour)
-  try {
-    const resp = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'anthropic/claude-haiku-4.5',
-        max_tokens: 300,
-        messages: [
-          { role: 'system', content: 'You are a East African dairy-cattle veterinary assistant. Explain the likely condition to a smallholder farmer in 3 short plain sentences. No medical disclaimers beyond "a veterinary officer should confirm". Never invent drugs not in the differential.' },
-          { role: 'user', content: `Symptoms: ${symptoms.join(', ')}\nTop differential: ${result.differential[0]?.disease} (${Math.round((result.differential[0]?.confidence ?? 0) * 100)}%). Explain.` },
-        ],
-      }),
-      signal: AbortSignal.timeout(12_000),
-    });
-    if (!resp.ok) return result;
-    const json = await resp.json();
-    const text: string | undefined = json?.choices?.[0]?.message?.content?.trim();
-    if (!text) return result;
-    return { ...result, engine: 'hybrid', llmExplanation: text };
-  } catch {
-    return result; // network/model failure → deterministic answer still shown
-  }
 }

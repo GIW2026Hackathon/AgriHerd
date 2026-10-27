@@ -1,4 +1,4 @@
-# AgriHerd AI API
+# DairyHub AI API
 
 This service keeps `GEMINI_API_KEY` on the server and exposes:
 

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: agriherd-web
+    name: dairyhub-web
     runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
@@ -9,7 +9,7 @@ services:
       - key: VITE_API_BASE_URL
         sync: false
   - type: web
-    name: agriherd-api
+    name: dairyhub-api
     runtime: node
     buildCommand: npm ci
     startCommand: npm run start:server

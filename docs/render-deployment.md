@@ -2,7 +2,7 @@
 
 ## Services
 
-The Render blueprint contains `agriherd-web` (static Vite frontend) and `agriherd-api` (Node HTTP API). Set `VITE_API_BASE_URL` on the frontend. Set `GEMINI_API_KEY`, `GEMINI_MODEL`, `FRONTEND_ORIGIN`, and server-side `DATABASE_URL` on the API. Never add `GEMINI_API_KEY` to the static site or commit these values.
+The Render blueprint contains `dairyhub-web` (static Vite frontend) and `dairyhub-api` (Node HTTP API). Set `VITE_API_BASE_URL` on the frontend. Set `GEMINI_API_KEY`, `GEMINI_MODEL`, `FRONTEND_ORIGIN`, and server-side `DATABASE_URL` on the API. Never add `GEMINI_API_KEY` to the static site or commit these values.
 
 ## What is deployable today
 
@@ -61,7 +61,7 @@ After deployment:
 The `DATABASE_URL` variable is for server-side Node scripts only:
 
 ```env
-DATABASE_URL=postgresql://user:password@host:5432/agriherd
+DATABASE_URL=postgresql://user:password@host:5432/dairyhub
 ```
 
 Do not add it to a Render Static Site. Static sites expose client assets publicly.

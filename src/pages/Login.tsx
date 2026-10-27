@@ -120,7 +120,7 @@ export default function Login() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="font-display text-2xl font-semibold text-cream-50">{createMode ? 'Create your account' : 'Sign in'}</h2>
-              <p className="mt-1 text-[12.5px] text-cream-100/60">{createMode ? 'Join AgriHerd to manage livestock health and receive veterinary support.' : 'Role-based access control is enforced at route, repository and database layers.'}</p>
+              <p className="mt-1 text-[12.5px] text-cream-100/60">{createMode ? 'Join DairyHub to manage livestock health and receive veterinary support.' : 'Role-based access control is enforced at route, repository and database layers.'}</p>
             </div>
             {createMode && <button type="button" onClick={() => setCreateMode(false)} className="rounded-lg px-2 py-1 text-[11px] font-semibold text-cream-100/60 hover:bg-white/10 hover:text-white">Back to sign in</button>}
           </div>
@@ -170,7 +170,7 @@ export default function Login() {
               </div>
               <label className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 p-3 text-[11px] leading-relaxed text-cream-100/65">
                 <input type="checkbox" checked={account.consent} onChange={(e) => setAccount((current) => ({ ...current, consent: e.target.checked }))} className="mt-0.5 accent-gold-400" />
-                <span>I agree that AgriHerd may use my submitted details to provide livestock-health services and connect me with authorised support.</span>
+                <span>I agree that DairyHub may use my submitted details to provide livestock-health services and connect me with authorised support.</span>
               </label>
               <button type="submit" className="group flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gold-400 text-[15px] font-bold text-pine-950 transition hover:bg-gold-300">
                 <UserPlus className="h-5 w-5" />Create account <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />

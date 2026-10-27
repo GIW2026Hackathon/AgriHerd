@@ -10,7 +10,7 @@ const frontendOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:5173')
 const maxBodyBytes = 32 * 1024;
 const emergencySymptoms = new Set(['down_cow', 'neuro_signs', 'epistaxis', 'high_fever']);
 
-const json = (res, status, body, origin = frontendOrigin) => {
+const json = (res, status, body, origin = frontendOrigins[0] || 'null') => {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': origin,
@@ -113,12 +113,12 @@ Respond in ${input.language === 'sw' ? 'simple Swahili' : 'simple English'}.`;
 const server = createServer(async (req, res) => {
   const origin = req.headers.origin;
   if (!isAllowedOrigin(origin)) return json(res, 403, { error: 'Origin is not allowed' }, 'null');
-  if (req.method === 'OPTIONS') return json(res, 204, {}, origin || frontendOrigin);
+  if (req.method === 'OPTIONS') return json(res, 204, {}, origin || frontendOrigins[0] || 'null');
   if (req.url === '/api/ai/health' && req.method === 'GET') {
     return json(res, 200, { ok: true, providerConfigured: Boolean(geminiKey), model }, origin || frontendOrigins[0]);
   }
   if (req.url !== '/api/ai/triage' || req.method !== 'POST') {
-    return json(res, 404, { error: 'Not found' }, origin || frontendOrigin);
+    return json(res, 404, { error: 'Not found' }, origin || frontendOrigins[0] || 'null');
   }
   try {
     const input = validateRequest(await parseJsonBody(req));
@@ -132,8 +132,8 @@ const server = createServer(async (req, res) => {
       modelResult,
     }, origin || frontendOrigins[0]);
   } catch (error) {
-    return json(res, 400, { error: error instanceof Error ? error.message : 'Invalid request' }, origin || frontendOrigin);
+    return json(res, 400, { error: error instanceof Error ? error.message : 'Invalid request' }, origin || frontendOrigins[0] || 'null');
   }
 });
 
-server.listen(port, () => console.log(`AgriHerd AI API listening on port ${port}`));
+server.listen(port, () => console.log(`DairyHub AI API listening on port ${port}`));

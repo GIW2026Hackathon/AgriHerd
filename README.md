@@ -106,7 +106,7 @@ Deployment does not turn the local demo repository into a production backend. Th
 - [Implementation audit](docs/implementation-audit.md) — current-state findings and production-readiness gaps.
 - [Test report](docs/test-report.md) — recorded validation results and remaining test coverage.
 - [Architecture notes](architecture.md) — prototype architecture reference.
-- [Database schema](schema.sql) and [domain migration](migrations/0002_required_domain_entities.sql).
+- [Database schema](schema.sql), [domain migration](migrations/0002_required_domain_entities.sql), and [security hardening migration](migrations/0003_security_hardening.sql).
 - [AI API notes](server/README.md).
 
 ## Production readiness

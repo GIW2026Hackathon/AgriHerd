@@ -161,9 +161,25 @@ create policy farm_members_read on public.farm_memberships for select using (
   user_id = auth.uid() or farm_id in (select id from public.farms where owner_id = auth.uid()) or public.current_role() in ('county','admin'));
 create policy consent_owner on public.user_consents for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy provider_public_verified on public.veterinary_profiles for select using (verification_status = 'verified');
-create policy provider_self_manage on public.veterinary_profiles for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy provider_credentials_self on public.provider_credentials for all using (provider_id = auth.uid()) with check (provider_id = auth.uid());
+create policy provider_self_read on public.veterinary_profiles for select using (user_id = auth.uid());
+create policy provider_staff_read on public.veterinary_profiles for select using (public.current_role() in ('county','admin'));
+create policy provider_self_insert on public.veterinary_profiles for insert with check (
+  user_id = auth.uid() and verification_status = 'pending' and verified_at is null and verified_by is null);
+create policy provider_self_update on public.veterinary_profiles for update using (
+  user_id = auth.uid())
+  with check (user_id = auth.uid() and verification_status = 'pending' and verified_at is null and verified_by is null);
+create policy provider_staff_verify on public.veterinary_profiles for update using (
+  public.current_role() in ('county','admin'))
+  with check (public.current_role() in ('county','admin'));
+create policy provider_credentials_self_read on public.provider_credentials for select using (provider_id = auth.uid());
+create policy provider_credentials_self_insert on public.provider_credentials for insert with check (
+  provider_id = auth.uid() and status = 'pending');
+create policy provider_credentials_self_delete on public.provider_credentials for delete using (
+  provider_id = auth.uid() and status = 'pending');
 create policy provider_credentials_staff on public.provider_credentials for select using (public.current_role() in ('county','admin'));
+create policy provider_credentials_staff_update on public.provider_credentials for update using (
+  public.current_role() in ('county','admin'))
+  with check (public.current_role() in ('county','admin'));
 create policy provider_services_verified on public.provider_services for select using (
   provider_id in (select user_id from public.veterinary_profiles where verification_status = 'verified'));
 create policy provider_areas_verified on public.provider_service_areas for select using (

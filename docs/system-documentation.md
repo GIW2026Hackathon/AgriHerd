@@ -182,7 +182,7 @@ The generated explanation is advisory and does not replace a veterinary diagnosi
 
 1. Provision a local PostgreSQL database or disposable PostgreSQL/Supabase project.
 2. Set one local server-side variable in `.env`:
-   `DATABASE_URL=postgresql://user:password@host:5432/agriherd`
+   `DATABASE_URL=postgresql://user:password@host:5432/dairyhub`
 3. Run `npm run db:health`.
 4. Review and apply `schema.sql` and `migrations/0002_required_domain_entities.sql` with `npm run db:migrate`.
 5. Run RLS tests with separate farmer, vet, sponsor, county, and admin identities.
@@ -193,9 +193,9 @@ The generated explanation is advisory and does not replace a veterinary diagnosi
 Available database commands:
 
 - `npm run db:health`: connects and reports the database/user without exposing the connection string.
-- `npm run db:migrate`: applies the baseline and ordered SQL migrations and records applied filenames in `public._agriherd_migrations`.
+- `npm run db:migrate`: applies the baseline and ordered SQL migrations and records applied filenames in `public._dairyhub_migrations`.
 
-The current SQL contains an initial RLS design, not a completed production authorization review.
+The SQL includes role, provider-verification, and claim-update hardening in `migrations/0003_security_hardening.sql`. It remains an initial RLS design, not a completed production authorization review, and has not been applied or tested against a live Supabase project.
 
 ### Database verification status
 
@@ -211,8 +211,8 @@ To complete database verification, provide the items in the setup checklist belo
 2. Set only `DATABASE_URL` in the ignored `.env` file.
 3. Confirm whether PostGIS and `pg_trgm` are enabled or permitted.
 4. Create test identities for farmer, vet, sponsor, county, and admin roles.
-5. Confirm the JWT role-claim strategy used by `current_role()` when using Supabase.
-6. Approve applying both SQL files to staging.
+5. Confirm the protected `profiles.role` values and trusted process used to assign administrative roles.
+6. Approve applying the baseline schema and all ordered migrations to staging.
 7. Provide the expected organization/farm-link test cases and whether synthetic seed data may be loaded.
 8. Confirm backup and rollback ownership before any shared-environment migration.
 

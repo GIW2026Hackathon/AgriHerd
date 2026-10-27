@@ -39,7 +39,13 @@ No real users, providers, payments, outbreaks, or operational statistics should 
 8. **No automated test suite is configured.** `package.json` has build/lint scripts but no unit, integration, or end-to-end test runner.
 9. **No environment-variable contract exists.** There is no `.env.example` describing database, auth, storage, AI, notification, or payment configuration.
 10. **Seeded provider and programme data is synthetic.** The product must not present it as verified real-world provider availability or sponsor coverage.
-11. **The environment template previously documented the wrong AI variable.** The frontend reads `VITE_AI_GATEWAY_KEY`; `AI_PROVIDER_API_KEY` is reserved for a future server-side integration and is not read by the current app.
+11. **AI credentials must remain server-side.** The unused direct-to-provider frontend helper that read `VITE_AI_GATEWAY_KEY` has been removed. The optional AI integration uses the server-side `GEMINI_API_KEY`; never expose provider credentials in `VITE_*` variables.
+
+## SQL authorization hardening
+
+The security hardening migration (`migrations/0003_security_hardening.sql`) addresses the SQL authorization findings by deriving roles from the protected profile row, preventing self-service role elevation and provider verification, restricting claim changes by role and workflow state, and reserving disbursement state for a trusted service. Claim line items are writable only by the requesting farmer while a claim is a draft.
+
+These controls apply only if the schema and migration are deployed. The browser application still uses demo persona selection and local storage, and no server API currently connects user actions to the database. The SQL has not been verified against a live Supabase deployment; complete role-isolation and workflow tests before using it with real data.
 
 ## Database and authorization gaps
 
