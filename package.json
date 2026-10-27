@@ -10,6 +10,7 @@
     "test": "vitest run",
     "db:health": "node --env-file=.env scripts/db-health.mjs",
     "db:migrate": "node --env-file=.env scripts/db-migrate.mjs",
+    "start:server": "node --env-file=.env server/index.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

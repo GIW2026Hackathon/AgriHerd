@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../lib/session';
 import { useToast } from '../lib/toast';
-import { screenDescription, farmerExplanation, enrichWithLLM, SYMPTOM_CATALOG, type FeedbackLanguage, type SymptomId } from '../lib/ai';
+import { screenDescription, farmerExplanation, requestGeminiTriage, SYMPTOM_CATALOG, type FeedbackLanguage, type SymptomId } from '../lib/ai';
 import { Card, CardHeader, Badge, Btn } from '../components/ui';
 import { cn, haversineKm } from '../lib/utils';
 import { wardByName } from '../lib/wards';
@@ -52,9 +52,12 @@ export default function AITriage() {
     setBusy(true);
     setResult(null);
     const screened = screenDescription(description, selected);
-    const enriched = await enrichWithLLM(screened.symptoms, screened.result);
+    const gemini = await requestGeminiTriage(description, language, screened.symptoms, screened.result);
+    const enriched = gemini
+      ? { ...screened.result, urgency: gemini.urgency, engine: 'hybrid' as const, farmerExplanation: gemini.farmerExplanation }
+      : { ...screened.result, farmerExplanation: farmerExplanation(screened.result, language) };
     setSelected(screened.symptoms);
-    setResult({ ...enriched, farmerExplanation: farmerExplanation(enriched, language) });
+    setResult(enriched);
     setBusy(false);
   };
 

@@ -1,16 +1,12 @@
 /**
- * AI-Assisted Disease Pre-Screening — Vercel AI SDK integration pattern.
+ * AI-Assisted Disease Pre-Screening.
  *
  * Two engines, honestly labelled in the UI:
  *   1. deterministic_rules — always available. Weighted veterinary
  *      symptom→disease matrix grounded in OIE/FAO dairy-cattle protocols
  *      for the East African highlands. Zero network dependency.
- *   2. vercel_ai_sdk — used ONLY when a gateway key is configured via
- *      import.meta.env.VITE_AI_GATEWAY_KEY. Uses the OpenAI-compatible
- *      chat-completions endpoint (Vercel AI SDK's `generateText` analogue)
- *      to produce a plain-language farmer explanation appended to the
- *      deterministic result. If the call fails, we fall back gracefully —
- *      never fabricate output.
+ *   2. gemini — requested through the server-side AgriHerd API. The browser
+ *      never receives the Gemini key and falls back to the local result.
  *
  * Red-flag override: downer cow + high fever, neuro signs, epistaxis, or
  * sudden death force EMERGENCY regardless of model confidence.
@@ -214,6 +210,35 @@ export function farmerExplanation(result: ScreeningResult, language: FeedbackLan
 export function screenDescription(description: string, selected: SymptomId[] = []) {
   const symptoms = [...new Set([...selected, ...symptomsFromDescription(description)])];
   return { symptoms, result: screenAnimal(symptoms) };
+}
+
+export async function requestGeminiTriage(
+  description: string,
+  language: FeedbackLanguage,
+  symptoms: SymptomId[],
+  deterministicResult: ScreeningResult,
+): Promise<{ urgency: ScreeningResult['urgency']; farmerExplanation: string; provider: string } | null> {
+  const apiBase = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_API_BASE_URL;
+  if (!apiBase) return null;
+  try {
+    const response = await fetch(`${apiBase.replace(/\/$/, '')}/api/ai/triage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description,
+        language,
+        selectedSymptoms: symptoms,
+        deterministicResult,
+      }),
+      signal: AbortSignal.timeout(22_000),
+    });
+    if (!response.ok) return null;
+    const payload = await response.json();
+    if (!['routine', 'priority', 'emergency'].includes(payload?.urgency) || typeof payload?.farmerExplanation !== 'string') return null;
+    return { urgency: payload.urgency, farmerExplanation: payload.farmerExplanation, provider: payload.provider || 'gemini' };
+  } catch {
+    return null;
+  }
 }
 
 export function screenAnimal(selected: SymptomId[]): ScreeningResult {

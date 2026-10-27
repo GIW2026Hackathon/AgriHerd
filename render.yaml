@@ -1,7 +1,25 @@
 services:
   - type: web
-    name: agriherd
+    name: agriherd-web
     runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     pullRequestPreviewsEnabled: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+  - type: web
+    name: agriherd-api
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm run start:server
+    healthCheckPath: /api/ai/health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false

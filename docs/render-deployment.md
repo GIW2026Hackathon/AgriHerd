@@ -1,5 +1,9 @@
 # Render deployment guide
 
+## Services
+
+The Render blueprint contains `agriherd-web` (static Vite frontend) and `agriherd-api` (Node HTTP API). Set `VITE_API_BASE_URL` on the frontend. Set `GEMINI_API_KEY`, `GEMINI_MODEL`, `FRONTEND_ORIGIN`, and server-side `DATABASE_URL` on the API. Never add `GEMINI_API_KEY` to the static site or commit these values.
+
 ## What is deployable today
 
 The current project is a Vite/React browser application. It can be deployed to Render as a **Static Site** using [render.yaml](../render.yaml).

@@ -22,6 +22,10 @@ The active database configuration is one server-side variable: `DATABASE_URL`. S
 
 The SQL schema expects PostgreSQL extensions and Supabase-compatible auth objects. For local development, a local Supabase stack is the safest option; plain PostgreSQL requires equivalent extensions and auth compatibility objects.
 
+### AI API integration
+
+The local API runs with `npm run start:server` and exposes `/api/ai/health` and `/api/ai/triage`. The Gemini key is server-only. Configure `VITE_API_BASE_URL` for the frontend and `GEMINI_API_KEY`, `GEMINI_MODEL`, and `FRONTEND_ORIGIN` for the API using [.env.example](.env.example).
+
 ### Render deployment
 
 This repository includes [render.yaml](render.yaml) for the current Vite static site. Render builds `dist/` with `npm ci && npm run build`; it does not receive `DATABASE_URL` because the current browser app must not connect directly to PostgreSQL. Follow the [Render deployment guide](docs/render-deployment.md).
