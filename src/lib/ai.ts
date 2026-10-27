@@ -159,6 +159,61 @@ export interface ScreeningResult {
   urgency: 'routine' | 'priority' | 'emergency';
   engine: 'deterministic_rules' | 'vercel_ai_sdk' | 'hybrid';
   llmExplanation?: string;
+  farmerExplanation?: string;
+}
+
+export type FeedbackLanguage = 'en' | 'sw';
+
+const DESCRIPTION_SYMPTOMS: Array<{ ids: SymptomId[]; terms: string[] }> = [
+  { ids: ['high_fever', 'fever'], terms: ['homa kali', 'homa', 'fever', 'temperature', 'joto sana'] },
+  { ids: ['anorexia'], terms: ['hali', 'hakula', 'hakuli', 'hawezi kula', 'not eating', 'off feed', 'appetite'] },
+  { ids: ['drop_yield'], terms: ['maziwa yamepungua', 'maziwa kupungua', 'milk drop', 'less milk'] },
+  { ids: ['swollen_lymph_nodes'], terms: ['tezi zimevimba', 'tezi', 'swollen lymph'] },
+  { ids: ['skin_nodules'], terms: ['vijipu', 'mabonge kwenye ngozi', 'skin nodules', 'lumps on skin'] },
+  { ids: ['swollen_udder', 'hot_udder'], terms: ['kiwele kimevimba', 'kiwele', 'udder', 'teat swollen'] },
+  { ids: ['clots_in_milk'], terms: ['damu kwenye maziwa', 'chembe kwenye maziwa', 'clots in milk'] },
+  { ids: ['pale_mucous_membranes'], terms: ['fizi zimepauka', 'macho yamepauka', 'pale gums', 'pale mucous'] },
+  { ids: ['ticks_observed'], terms: ['kupe', 'kupe wameonekana', 'ticks'] },
+  { ids: ['down_cow'], terms: ['amelala hawezi kusimama', 'hawezi kusimama', 'down cow', 'cannot stand'] },
+  { ids: ['diarrhoea'], terms: ['kuhara', 'diarrhoea', 'diarrhea', 'stool is watery'] },
+  { ids: ['weakness', 'depression'], terms: ['dhaifu', 'mnyonge', 'weak', 'dull', 'depressed'] },
+  { ids: ['lachrymation'], terms: ['macho yanatokwa na maji', 'macho yanalia', 'runny eyes', 'watery eyes'] },
+  { ids: ['cough', 'nasal_discharge'], terms: ['anakohoa', 'kikohozi', 'cough', 'mafua', 'nasal discharge'] },
+  { ids: ['dyspnoea'], terms: ['anapumua kwa shida', 'kupumua kwa shida', 'difficulty breathing', 'breathing hard'] },
+  { ids: ['neuro_signs'], terms: ['anazunguka', 'anagonga kichwa', 'circling', 'head pressing'] },
+  { ids: ['epistaxis'], terms: ['damu puani', 'nosebleed', 'nose bleeding'] },
+  { ids: ['red_urine'], terms: ['mkojo mwekundu', 'mkojo wa damu', 'red urine', 'dark urine'] },
+  { ids: ['jaundice'], terms: ['macho ya njano', 'yellow eyes', 'jaundice'] },
+  { ids: ['rumen_stasis'], terms: ['tumbo halisikiki', 'hakuna sauti tumboni', 'no rumen sounds'] },
+  { ids: ['weight_loss'], terms: ['anapungua uzito', 'kupungua uzito', 'weight loss'] },
+  { ids: ['lameness'], terms: ['anachechemea', 'kilema', 'lameness'] },
+];
+
+export function symptomsFromDescription(description: string): SymptomId[] {
+  const text = description.trim().toLocaleLowerCase();
+  const found = new Set<SymptomId>();
+  for (const match of DESCRIPTION_SYMPTOMS) {
+    if (match.terms.some((term) => text.includes(term))) match.ids.forEach((id) => found.add(id));
+  }
+  return [...found];
+}
+
+export function farmerExplanation(result: ScreeningResult, language: FeedbackLanguage): string {
+  const top = result.differential[0]?.disease ?? 'hali isiyojulikana';
+  if (language === 'sw') {
+    const urgency = result.urgency === 'emergency'
+      ? 'Hii ni dharura. Mpigie mtaalamu wa mifugo sasa na usimsogeze mnyama.'
+      : result.urgency === 'priority'
+        ? 'Mnyama anahitaji kuangaliwa na mtaalamu wa mifugo hivi karibuni.'
+        : 'Endelea kumchunguza mnyama na panga kuonana na mtaalamu wa mifugo ikiwa hali itaendelea.';
+    return `Dalili zinafanana zaidi na ${top}. ${urgency} Huu ni uchunguzi wa awali tu; mtaalamu wa mifugo ndiye anayethibitisha ugonjwa na matibabu.`;
+  }
+  return `The symptoms most closely match ${top}. ${result.urgency === 'emergency' ? 'Contact a veterinary professional immediately.' : 'Arrange veterinary review if the condition continues.'} This is a preliminary screen; a veterinary professional must confirm the diagnosis and treatment.`;
+}
+
+export function screenDescription(description: string, selected: SymptomId[] = []) {
+  const symptoms = [...new Set([...selected, ...symptomsFromDescription(description)])];
+  return { symptoms, result: screenAnimal(symptoms) };
 }
 
 export function screenAnimal(selected: SymptomId[]): ScreeningResult {

@@ -174,7 +174,9 @@ The repository ignores `.env` and `.env.*` files except `.env.example`. The chec
 
 The browser continues using the local demo repository. The server-side PostgreSQL scripts use only `DATABASE_URL`; the browser never receives this value.
 
-The optional browser AI gateway integration has been removed from the active environment contract. The deterministic triage engine remains available without credentials.
+The AI Triage screen supports typed farmer descriptions and browser speech recognition. It defaults to Swahili (`sw-KE`) feedback, recognises common Swahili and English livestock-health phrases, and feeds the resulting symptom signals into the deterministic veterinary engine. Browser speech recognition depends on browser support and microphone permission; the typed input remains the fallback.
+
+The generated explanation is advisory and does not replace a veterinary diagnosis. Red-flag symptoms still force emergency escalation. Model-backed enrichment remains optional and must be implemented behind a server-side API before production credentials are introduced; provider keys must never be placed in browser `VITE_*` variables.
 
 ## 9. Database deployment
 
@@ -239,7 +241,7 @@ Before production:
 - Payment provider sandbox, signed webhooks, and reconciliation
 - Vercel environment configuration
 
-No real payment, SMS, provider verification, or AI provider call is currently performed.
+No real payment, SMS, provider verification, or server-side model provider call is currently performed. The current farmer AI workflow is a local, deterministic pre-screen with optional browser speech-to-text.
 
 ## 12. Deployment
 

@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Stethoscope, Sparkles, AlertOctagon, ShieldCheck, Plus, Check, Loader2, PawPrint,
-  ChevronDown, Ban, BadgeCheck,
+  ChevronDown, Ban, BadgeCheck, Mic, Square, Languages,
 } from 'lucide-react';
 import { useApp } from '../lib/session';
 import { useToast } from '../lib/toast';
-import { screenAnimal, enrichWithLLM, SYMPTOM_CATALOG, type SymptomId } from '../lib/ai';
+import { screenDescription, farmerExplanation, enrichWithLLM, SYMPTOM_CATALOG, type FeedbackLanguage, type SymptomId } from '../lib/ai';
 import { Card, CardHeader, Badge, Btn } from '../components/ui';
 import { cn, haversineKm } from '../lib/utils';
 import { wardByName } from '../lib/wards';
@@ -21,20 +21,71 @@ export default function AITriage() {
   const farmAnimals = useMemo(() => db.animals.filter(a => a.farm_id === farmId && a.status !== 'deceased' && a.status !== 'sold'), [db.animals, farmId]);
   const [animalId, setAnimalId] = useState<string>('');
   const [selected, setSelected] = useState<SymptomId[]>([]);
+  const [description, setDescription] = useState('');
+  const [language, setLanguage] = useState<FeedbackLanguage>('sw');
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<{
+    start: () => void;
+    stop: () => void;
+    lang: string;
+    onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+    onend: (() => void) | null;
+    onerror: (() => void) | null;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<ReturnType<typeof screenAnimal> | null>(null);
+  const [result, setResult] = useState<ReturnType<typeof screenDescription>['result'] & { farmerExplanation?: string } | null>(null);
   const [logging, setLogging] = useState(false);
+
+  useEffect(() => {
+    const speech = window as Window & {
+      SpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+      webkitSpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+    };
+    setSpeechSupported(Boolean(speech.SpeechRecognition || speech.webkitSpeechRecognition));
+  }, []);
 
   const toggle = (id: SymptomId) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
   const runScreen = async () => {
-    if (selected.length === 0) { toast('Pick at least one symptom', { tone: 'warning' }); return; }
+    if (selected.length === 0 && !description.trim()) { toast('Add symptoms or describe what you see', { tone: 'warning' }); return; }
     setBusy(true);
     setResult(null);
-    const base = screenAnimal(selected);
-    const enriched = await enrichWithLLM(selected, base);
-    setResult(enriched);
+    const screened = screenDescription(description, selected);
+    const enriched = await enrichWithLLM(screened.symptoms, screened.result);
+    setSelected(screened.symptoms);
+    setResult({ ...enriched, farmerExplanation: farmerExplanation(enriched, language) });
     setBusy(false);
+  };
+
+  const toggleVoice = () => {
+    const speech = window as Window & {
+      SpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+      webkitSpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+    };
+    const Recognition = speech.SpeechRecognition || speech.webkitSpeechRecognition;
+    if (!Recognition) {
+      toast('Voice notes are not supported in this browser', { body: 'Type the description instead, or use Chrome/Edge on a secure connection.', tone: 'warning' });
+      return;
+    }
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.lang = language === 'sw' ? 'sw-KE' : 'en-KE';
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results).map((item) => item[0].transcript).join(' ');
+      setDescription((current) => `${current} ${transcript}`.trim());
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => {
+      setListening(false);
+      toast('Voice note could not be captured', { body: 'Please check microphone permission and try again.', tone: 'warning' });
+    };
+    recognitionRef.current = recognition;
+    setListening(true);
+    recognition.start();
   };
 
   // nearest available vet to the farm (Haversine)
@@ -57,7 +108,7 @@ export default function AITriage() {
     const c = client.createCaseFromScreening(user, {
       animal_id: animalId || null,
       farm_id: farmId,
-      chief_complaint: `AI triage (${selected.length} symptoms): ${selected.slice(0, 4).map(s => SYMPTOM_CATALOG.find(c => c.id === s)?.label).join(', ')}`,
+      chief_complaint: description.trim() || `AI triage (${selected.length} symptoms): ${selected.slice(0, 4).map(s => SYMPTOM_CATALOG.find(c => c.id === s)?.label).join(', ')}`,
       symptoms: selected,
       ai_confidence: result.differential[0]?.confidence ?? null,
       ai_differential: result.differential,
@@ -79,7 +130,7 @@ export default function AITriage() {
       <div>
         <p className="label-caps text-pine-600">Module · AI Pre-Screening</p>
         <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-pine-950">AI Disease Pre-Screening</h1>
-        <p className="mt-0.5 max-w-2xl text-[13px] text-stone-500">Describe what you see. The veterinary differential engine ranks likely conditions — a configured AI gateway adds a plain-language explanation; otherwise the deterministic engine answers on its own. Nothing is invented.</p>
+        <p className="mt-0.5 max-w-2xl text-[13px] text-stone-500">Andika au sema kwa Kiswahili unachoona. Uchambuzi wa awali husaidia kupanga haraka; daktari wa mifugo ndiye anayethibitisha ugonjwa na matibabu.</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-5">
@@ -103,6 +154,23 @@ export default function AITriage() {
           </div>
 
           <CardHeader title="2 · Symptoms observed" sub={`${selected.length} selected — tap all that apply`} />
+          <div className="border-b border-cream-100 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <label className="label-caps" htmlFor="description">Maelezo ya mkulima / Farmer description</label>
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold text-stone-600"><Languages className="h-3.5 w-3.5" /> Feedback
+                <select value={language} onChange={(event) => setLanguage(event.target.value as FeedbackLanguage)} className="rounded-lg border border-cream-300 bg-white px-2 py-1 text-[11px]">
+                  <option value="sw">Kiswahili</option><option value="en">English</option>
+                </select>
+              </label>
+            </div>
+            <textarea id="description" value={description} onChange={(event) => setDescription(event.target.value)} className="input-field mt-1.5 min-h-24 resize-y" placeholder="Mfano: Ng'ombe ana homa kali, hakuli, na kupe wameonekana..." />
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="text-[10.5px] text-stone-400">Maneno ya Kiswahili na Kiingereza yanayotambuliwa yataongezwa kwenye dalili.</p>
+              <button type="button" onClick={toggleVoice} disabled={!speechSupported} className={cn('inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold', listening ? 'border-red-300 bg-red-50 text-red-700' : 'border-pine-300 bg-pine-50 text-pine-800', !speechSupported && 'cursor-not-allowed opacity-50')}>
+                {listening ? <Square className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}{listening ? 'Stop recording' : 'Sema / Voice note'}
+              </button>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-1.5 p-4">
             {SYMPTOM_CATALOG.map(s => {
               const on = selected.includes(s.id);
@@ -147,6 +215,7 @@ export default function AITriage() {
               <CardHeader title="Screening Result" sub={`Engine: ${result.engine === 'hybrid' ? 'Deterministic rules + AI Gateway (hybrid)' : 'Deterministic veterinary rule engine'}`}
                 action={<Badge tone={result.urgency === 'emergency' ? 'red' : result.urgency === 'priority' ? 'amber' : 'green'} className="!px-3 !py-1 !text-[12px]">{result.urgency === 'emergency' && <AlertOctagon className="h-3.5 w-3.5" />}{result.urgency.toUpperCase()}</Badge>} />
               <div className="space-y-2 p-4">
+                {result.farmerExplanation && <div className="rounded-xl border border-pine-200 bg-white/70 p-3 text-[12px] leading-relaxed text-pine-950"><p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-pine-600">{language === 'sw' ? 'Maelezo kwa mkulima' : 'Farmer explanation'}</p>{result.farmerExplanation}</div>}
                 {result.differential.map((d, i) => (
                   <div key={i} className="flex items-start gap-3 rounded-xl border border-cream-200 bg-white p-3">
                     <span className={cn('mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-[12px] font-bold', i === 0 ? 'bg-pine-800 text-cream-50' : 'bg-cream-100 text-stone-500')}>{i + 1}</span>
@@ -168,7 +237,7 @@ export default function AITriage() {
                   {logging ? <Loader2 className="h-4 w-4 animate-spin" /> : <PawPrint className="h-4 w-4" />}
                   Log as case{recommendedVet ? ` — auto-assign ${recommendedVet.full_name.split('—')[0].trim().split(' ').slice(0, 2).join(' ')}` : ''}
                 </Btn>
-                <button onClick={() => { setResult(null); setSelected([]); }} className="mt-2 flex w-full items-center justify-center gap-1 text-[11px] font-semibold text-stone-500 hover:text-pine-800"><Ban className="h-3.5 w-3.5" />Clear screening</button>
+                <button onClick={() => { setResult(null); setSelected([]); setDescription(''); }} className="mt-2 flex w-full items-center justify-center gap-1 text-[11px] font-semibold text-stone-500 hover:text-pine-800"><Ban className="h-3.5 w-3.5" />Clear screening</button>
               </div>
             </Card>
           )}
