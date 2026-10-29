@@ -21,6 +21,7 @@ import Reports from './pages/Reports';
 import Audit from './pages/Audit';
 import UsersAdmin from './pages/UsersAdmin';
 import NotFound from './pages/NotFound';
+import Account from './pages/Account';
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
             {/* Authenticated application shell (role-gated nav per layout) */}
             <Route path="/app/farmer" element={<AppLayout />}>
               <Route index element={<FarmerHome />} />
+              <Route path="account" element={<Account />} />
               <Route path="registry" element={<Registry />} />
               <Route path="cases" element={<Cases />} />
               <Route path="cases/:caseId" element={<CaseDetail />} />
@@ -46,6 +48,7 @@ export default function App() {
 
             <Route path="/app/vet" element={<AppLayout />}>
               <Route index element={<VetHome />} />
+              <Route path="account" element={<Account />} />
               <Route path="registry" element={<Registry />} />
               <Route path="cases" element={<Cases />} />
               <Route path="cases/:caseId" element={<CaseDetail />} />
@@ -58,6 +61,7 @@ export default function App() {
 
             <Route path="/app/sponsor" element={<AppLayout />}>
               <Route index element={<SponsorHome />} />
+              <Route path="account" element={<Account />} />
               <Route path="registry" element={<Registry />} />
               <Route path="cases" element={<Cases />} />
               <Route path="cases/:caseId" element={<CaseDetail />} />
@@ -68,6 +72,7 @@ export default function App() {
 
             <Route path="/app/county" element={<AppLayout />}>
               <Route index element={<CountyHome />} />
+              <Route path="account" element={<Account />} />
               <Route path="registry" element={<Registry />} />
               <Route path="cases" element={<Cases />} />
               <Route path="cases/:caseId" element={<CaseDetail />} />
@@ -80,6 +85,7 @@ export default function App() {
 
             <Route path="/app/admin" element={<AppLayout />}>
               <Route index element={<AdminHome />} />
+              <Route path="account" element={<Account />} />
               <Route path="registry" element={<Registry />} />
               <Route path="cases" element={<Cases />} />
               <Route path="cases/:caseId" element={<CaseDetail />} />

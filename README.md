@@ -44,10 +44,11 @@ Open the local URL printed by Vite (normally `http://localhost:5173`). The front
 ### Sign in to the demo
 
 1. Open **Sign in** and choose a persona: Farmer, Veterinary Officer, Sponsor / Co-op, County Authority, or Platform Admin.
-2. Use the demo password: `demo2026`.
-3. Explore the role dashboard and switch personas by signing out and selecting another role.
+2. Select a demo profile and use the shared demo password: `demo2026`.
+3. To showcase registration, create a local farmer or veterinary profile. It is saved in this browser and starts a demo session immediately.
+4. Open **My demo account** in the sidebar to edit profile details or preview the simulated password-reset flow.
 
-The sign-in and account creation screens are demonstrations only; they do not create or authenticate real accounts.
+Sign-in, registration, profile editing, and password reset are demonstrations only. Created profiles and profile edits are stored in the browser's demo dataset; passwords are never stored, reset messages are never sent, and no real identity or account is authenticated. The shared demo password applies to all profiles.
 
 ## AI triage API (optional)
 

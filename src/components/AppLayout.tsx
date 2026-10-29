@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate, Navigate } from 'react-router-d
 import {
   LayoutDashboard, Wheat, PawPrint, Stethoscope, Radar, Coins, ClipboardList,
   Syringe, FileText, ScrollText, Users, LogOut, Bell, ChevronDown, Check,
-  Tractor, Building2, RefreshCw, Menu, X, Landmark, ShieldCheck,
+  Tractor, Building2, RefreshCw, Menu, X, Landmark, ShieldCheck, UserRound,
 } from 'lucide-react';
 import { useApp } from '../lib/session';
 import { resetDemoData } from '../lib/store';
@@ -112,6 +112,9 @@ export default function AppLayout() {
         </nav>
 
         <div className="border-t border-white/10 p-3">
+          <Link to={`${base}/account`} className={cn('mb-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-medium hover:bg-white/5', location.pathname === `${base}/account` ? 'bg-white/10 text-cream-50' : 'text-cream-100/55 hover:text-cream-100')}>
+            <UserRound className="h-4 w-4" /> My demo account
+          </Link>
           <button onClick={() => { resetDemoData(); toast('Demo data reset', { body: 'Seeded dataset rebuilt.', tone: 'info' }); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[11px] font-medium text-cream-100/55 hover:bg-white/5 hover:text-cream-100">
             <RefreshCw className="h-4 w-4" /> Reset demo dataset
           </button>

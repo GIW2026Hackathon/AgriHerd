@@ -102,7 +102,9 @@ Role route families:
 - `#/app/county`
 - `#/app/admin`
 
-Common feature routes include `registry`, `cases`, `cases/:caseId`, `triage`, `claims`, `herd-health`, `surveillance`, `reports`, `audit`, and `users`, subject to role navigation.
+Common feature routes include `account`, `registry`, `cases`, `cases/:caseId`, `triage`, `claims`, `herd-health`, `surveillance`, `reports`, `audit`, and `users`, subject to role navigation.
+
+The sign-in screen supports local demo profiles for farmers and veterinary officers. Profile creation and profile edits are stored in browser `localStorage`; sessions remain in `sessionStorage`. All profiles use the shared demo password, which is not stored. Password reset is simulated and sends no email. These flows do not provide real identity verification, authentication, or account recovery.
 
 ## 6. Data model
 

@@ -40,6 +40,30 @@ describe('DataClient visibility', () => {
 });
 
 describe('DataClient workflows', () => {
+  it('creates and updates local demo profiles without persisting passwords', () => {
+    const client = new DataClient();
+    const profile = client.createDemoAccount({
+      full_name: 'Amina Demo',
+      phone: '+254 700 000 111',
+      email: 'AMINA@example.test',
+      role: 'farmer',
+    });
+
+    expect(profile.email).toBe('amina@example.test');
+    expect(new DataClient().profileById(profile.id)?.full_name).toBe('Amina Demo');
+    expect(localStorage.getItem('glhvis.db.v1')).not.toContain('password');
+
+    expect(client.updateOwnDemoProfile(profile, {
+      full_name: 'Amina Updated',
+      phone: '+254 700 000 222',
+      email: 'amina.updated@example.test',
+    })).toBe(true);
+    const reloaded = new DataClient();
+    expect(reloaded.profileById(profile.id)?.full_name).toBe('Amina Updated');
+    expect(reloaded.profileById(profile.id)?.phone).toBe('+254 700 000 222');
+    expect(reloaded.auditFor('profiles', profile.id)).toHaveLength(2);
+  });
+
   it('persists a triage case, screening, event, notification, and audit record', () => {
     const client = new DataClient();
     const user = farmer();

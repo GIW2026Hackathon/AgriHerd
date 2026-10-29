@@ -2,7 +2,7 @@
 export type Role = 'farmer' | 'vet' | 'sponsor' | 'county' | 'admin';
 
 export interface Profile {
-  id: string; full_name: string; role: Role; phone: string; national_id: string;
+  id: string; full_name: string; role: Role; phone: string; national_id: string; email?: string;
   county: string; ward: string; organization: string | null; avatar_url?: string | null;
   specialty?: string; available?: boolean; years_exp?: number; bio?: string;
 }

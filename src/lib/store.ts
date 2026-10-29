@@ -167,6 +167,45 @@ export class DataClient {
   }
 
   // ---------- mutations ----------
+  createDemoAccount(input: { full_name: string; phone: string; email?: string; role: 'farmer' | 'vet' }) {
+    const profile: Profile = {
+      id: uuid(),
+      full_name: input.full_name.trim(),
+      role: input.role,
+      phone: input.phone.trim(),
+      email: input.email?.trim().toLowerCase() || undefined,
+      national_id: `DEMO-${uuid().slice(0, 8).toUpperCase()}`,
+      county: 'Kisii',
+      ward: '',
+      organization: null,
+      ...(input.role === 'vet' ? { specialty: 'Demo profile', available: false } : {}),
+    };
+    this.db.profiles = [profile, ...this.db.profiles];
+    this.auditWrite(profile, 'account.demo_created', 'profiles', profile.id, null, {
+      role: profile.role,
+      email: profile.email ?? null,
+    });
+    this.save();
+    return profile;
+  }
+
+  updateOwnDemoProfile(actor: Profile, updates: Pick<Profile, 'full_name' | 'phone' | 'email'>) {
+    const before = this.profileById(actor.id);
+    if (!before) return false;
+    const updated: Profile = {
+      ...before,
+      full_name: updates.full_name.trim(),
+      phone: updates.phone.trim(),
+      email: updates.email?.trim().toLowerCase() || undefined,
+    };
+    this.db.profiles = this.db.profiles.map((profile) => profile.id === actor.id ? updated : profile);
+    this.auditWrite(updated, 'account.demo_profile_updated', 'profiles', updated.id,
+      { full_name: before.full_name, phone: before.phone, email: before.email ?? null },
+      { full_name: updated.full_name, phone: updated.phone, email: updated.email ?? null });
+    this.save();
+    return true;
+  }
+
   createFarm(actor: Profile, data: Omit<Farm, 'id' | 'created_at' | 'farm_code'> & { farm_code?: string }) {
     const seq = 100 + Math.floor(Math.random() * 900);
     const farm: Farm = { ...data, id: uuid(), farm_code: data.farm_code ?? `KIS-2026-${String(seq).padStart(4, '0')}`, created_at: new Date().toISOString() };
