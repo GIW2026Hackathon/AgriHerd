@@ -157,6 +157,19 @@ export default function AITriage() {
       .sort((a, b) => a.km - b.km)[0]?.vet ?? null;
   }, [db.farms, db.profiles, farmId]);
 
+  if (role === 'farmer' && farms.length === 0) {
+    return (
+      <div className="mx-auto max-w-2xl p-4 sm:p-6">
+        <Card>
+          <CardHeader title="Add your farm to get started" sub="Farm details are needed to save health reports and connect them to the right animals." />
+          <div className="p-4 pt-0">
+            <button onClick={() => navigate('/app/farmer/registry')} className="h-11 rounded-xl bg-pine-800 px-5 text-[13px] font-bold text-cream-50 hover:bg-pine-700">Add my farm</button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   const logCase = () => {
     if (!result) return;
     setLogging(true);

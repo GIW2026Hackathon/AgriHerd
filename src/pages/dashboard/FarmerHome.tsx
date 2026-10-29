@@ -44,10 +44,10 @@ export default function FarmerHome() {
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-gold-300">Monday, 26 October 2026 · Sironga Sector</p>
             <h1 className="mt-1 font-display text-2xl font-semibold text-cream-50 sm:text-3xl">Habari, {user.full_name.split(' ')[0]} 👋</h1>
-            <p className="mt-1 max-w-md text-[12.5px] text-cream-100/75">{myFarms.length} farm{myFarms.length > 1 ? 's' : ''} · {myAnimals.length} tagged animals{coverage ? <> · Covered by <strong className="text-gold-300">{coverage.sponsor?.company_name}</strong> ({coverage.member.coverage_tier} tier)</> : ' · Not yet on a sponsor scheme'}</p>
+            <p className="mt-1 max-w-md text-[12.5px] text-cream-100/75">{myFarms.length === 0 ? 'Add a farm to start registering animals and keeping health records.' : <>{myFarms.length} farm{myFarms.length > 1 ? 's' : ''} · {myAnimals.length} tagged animals{coverage ? <> · Covered by <strong className="text-gold-300">{coverage.sponsor?.company_name}</strong> ({coverage.member.coverage_tier} tier)</> : ' · Not yet on a sponsor scheme'}</>}</p>
           </div>
-          <button onClick={() => navigate('/app/farmer/triage')} className="group flex items-center gap-2 rounded-2xl bg-gold-400 px-5 py-3 text-[14px] font-bold text-pine-950 shadow-lift transition hover:bg-gold-300">
-            <Stethoscope className="h-5 w-5" strokeWidth={2} /> AI Health Check<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+          <button onClick={() => navigate(myFarms.length === 0 ? '/app/farmer/registry' : '/app/farmer/triage')} className="group flex items-center gap-2 rounded-2xl bg-gold-400 px-5 py-3 text-[14px] font-bold text-pine-950 shadow-lift transition hover:bg-gold-300">
+            <Stethoscope className="h-5 w-5" strokeWidth={2} />{myFarms.length === 0 ? 'Set up your farm' : 'AI Health Check'}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
           </button>
         </div>
       </div>

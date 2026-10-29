@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
-  Wheat, PawPrint, Plus, Search, MapPin, X, ChevronRight, Tag, SlidersHorizontal,
+  Wheat, PawPrint, Plus, Search, MapPin, X, ChevronRight, Tag,
 } from 'lucide-react';
 import { useApp } from '../lib/session';
 import { useToast } from '../lib/toast';
 import { Card, CardHeader, Badge, EmptyState, Th, Td } from '../components/ui';
 import { ageYears, cn } from '../lib/utils';
 import type { AnimalStatus, Animal } from '../lib/types';
+import { WARDS } from '../lib/wards';
 
 const STATUS_TONE: Record<AnimalStatus, 'green' | 'amber' | 'red' | 'slate' | 'blue' | 'purple'> = {
   healthy: 'green', under_treatment: 'amber', quarantine: 'red', recovered: 'blue', deceased: 'slate', sold: 'purple',
@@ -19,7 +19,8 @@ export default function Registry() {
   const [q, setQ] = useState('');
   const [farmFilter, setFarmFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<AnimalStatus | 'all'>('all');
-  const [adding, setAdding] = useState(false);
+  const [addingFarm, setAddingFarm] = useState(false);
+  const [addingAnimal, setAddingAnimal] = useState(false);
 
   const canWrite = role === 'farmer' || role === 'admin';
   const farms = useMemo(() => client.farmsForUser(user), [client, user, db.farms]);
@@ -37,6 +38,34 @@ export default function Registry() {
   }), [allAnimals, q, farmFilter, statusFilter]);
 
   const [form, setForm] = useState({ tag_number: '', farm_id: '', breed: 'Friesian × Sahiwal', sex: 'female' as 'female' | 'male', dob: '2023-01-15', stage: 'heifer' as Animal['stage'], parity: '0', last_milk_yield_kg: '' });
+  const [farmForm, setFarmForm] = useState({ name: '', ward: '', primary_breed: 'Friesian × Sahiwal' });
+
+  const submitFarm = (e: React.FormEvent) => {
+    e.preventDefault();
+    const selectedWard = WARDS.find((ward) => ward.name === farmForm.ward);
+    if (!farmForm.name.trim() || !selectedWard) {
+      toast('Complete the farm details', { tone: 'warning', body: 'Enter a farm name and choose your ward.' });
+      return;
+    }
+    const farm = client.createFarm(user, {
+      name: farmForm.name.trim(),
+      owner_id: user.id,
+      county: selectedWard.county,
+      sub_county: selectedWard.sub_county,
+      ward: selectedWard.name,
+      lat: selectedWard.lat,
+      lng: selectedWard.lng,
+      herd_size: 0,
+      primary_breed: farmForm.primary_breed,
+      sponsor_id: null,
+    });
+    tick();
+    setFarmFilter(farm.id);
+    setForm((current) => ({ ...current, farm_id: farm.id }));
+    setAddingFarm(false);
+    setAddingAnimal(true);
+    toast('Farm added', { body: 'Now register an animal to start using health records and triage.', tone: 'success' });
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +81,7 @@ export default function Registry() {
       last_milk_yield_kg: form.last_milk_yield_kg ? Number(form.last_milk_yield_kg) : null,
     });
     tick();
-    setAdding(false);
+    setAddingAnimal(false);
     setForm({ ...form, tag_number: '', last_milk_yield_kg: '' });
     toast('Animal registered', { body: `${form.tag_number.trim().toUpperCase()} added to the herd registry.`, tone: 'success' });
   };
@@ -65,11 +94,42 @@ export default function Registry() {
           <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight text-pine-950">Farm &amp; Animal Registry</h1>
           <p className="mt-0.5 text-[13px] text-stone-500">{farms.length} farm{farms.length === 1 ? '' : 's'} · {allAnimals.length} animals in scope ({role} view)</p>
         </div>
-        {canWrite && <button onClick={() => setAdding(v => !v)} className="flex h-10 items-center gap-1.5 rounded-xl bg-pine-800 px-4 text-[13px] font-bold text-cream-50 hover:bg-pine-700">{adding ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{adding ? 'Close' : 'Register animal'}</button>}
+        {canWrite && <div className="flex flex-wrap gap-2">
+          <button onClick={() => setAddingFarm((value) => !value)} className="flex h-10 items-center gap-1.5 rounded-xl border border-pine-700 bg-white px-4 text-[13px] font-bold text-pine-900 hover:bg-pine-50">{addingFarm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{addingFarm ? 'Close farm form' : 'Add farm'}</button>
+          <button onClick={() => setAddingAnimal((value) => !value)} disabled={farms.length === 0} title={farms.length === 0 ? 'Add a farm before registering animals' : undefined} className="flex h-10 items-center gap-1.5 rounded-xl bg-pine-800 px-4 text-[13px] font-bold text-cream-50 hover:bg-pine-700 disabled:cursor-not-allowed disabled:opacity-50">{addingAnimal ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{addingAnimal ? 'Close animal form' : 'Register animal'}</button>
+        </div>}
       </div>
 
+      {addingFarm && (
+        <Card className="border-pine-600/40">
+          <CardHeader title="Add your farm" sub="Choose your ward; we use its approximate center for the demo map" />
+          <form onSubmit={submitFarm} className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5">
+            <div>
+              <label className="label-caps" htmlFor="farm-name">Farm name</label>
+              <input id="farm-name" required maxLength={100} autoFocus value={farmForm.name} onChange={(event) => setFarmForm((current) => ({ ...current, name: event.target.value }))} placeholder="e.g. Sunrise Dairy Farm" className="input-field mt-1.5" />
+            </div>
+            <div>
+              <label className="label-caps" htmlFor="farm-ward">Ward</label>
+              <select id="farm-ward" required value={farmForm.ward} onChange={(event) => setFarmForm((current) => ({ ...current, ward: event.target.value }))} className="input-field mt-1.5">
+                <option value="" disabled>Choose your ward</option>
+                {WARDS.map((ward) => <option key={`${ward.county}-${ward.name}`} value={ward.name}>{ward.name} · {ward.sub_county} · {ward.county}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label-caps" htmlFor="farm-breed">Main cattle breed</label>
+              <select id="farm-breed" value={farmForm.primary_breed} onChange={(event) => setFarmForm((current) => ({ ...current, primary_breed: event.target.value }))} className="input-field mt-1.5">
+                {['Friesian × Sahiwal', 'Friesian', 'Ayrshire', 'Guernsey', 'Jersey', 'Brown Swiss', 'Sahiwal', 'Other / mixed'].map((breed) => <option key={breed}>{breed}</option>)}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button type="submit" className="h-11 w-full rounded-xl bg-pine-800 px-5 text-[13px] font-bold text-cream-50 hover:bg-pine-700 sm:w-auto">Save farm and continue</button>
+            </div>
+          </form>
+        </Card>
+      )}
+
       {/* Add animal form */}
-      {adding && (
+      {addingAnimal && farms.length > 0 && (
         <Card className="border-pine-600/40">
           <CardHeader title="Register New Animal" sub="RFID ear-tag number is the unique key per farm" />
           <form onSubmit={submit} className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -124,6 +184,11 @@ export default function Registry() {
 
       {/* Farms cards */}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {farms.length === 0 && (
+          <Card className="border-dashed md:col-span-2 xl:col-span-4">
+            <EmptyState icon={<Wheat className="h-7 w-7" />} title="Start by adding your farm" body="Add your farm name and ward first. We’ll then take you straight to animal registration." action={<button onClick={() => setAddingFarm(true)} className="mt-1 h-10 rounded-xl bg-pine-800 px-4 text-[12px] font-bold text-cream-50 hover:bg-pine-700">Add my farm</button>} />
+          </Card>
+        )}
         {farms.map(f => {
           const fAnimals = db.animals.filter(a => a.farm_id === f.id);
           const owner = db.profiles.find(p => p.id === f.owner_id);

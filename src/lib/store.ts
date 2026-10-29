@@ -208,7 +208,9 @@ export class DataClient {
 
   createFarm(actor: Profile, data: Omit<Farm, 'id' | 'created_at' | 'farm_code'> & { farm_code?: string }) {
     const seq = 100 + Math.floor(Math.random() * 900);
-    const farm: Farm = { ...data, id: uuid(), farm_code: data.farm_code ?? `KIS-2026-${String(seq).padStart(4, '0')}`, created_at: new Date().toISOString() };
+    const prefix = data.county === 'Nyamira' ? 'NYM' : 'KIS';
+    const year = new Date().getFullYear();
+    const farm: Farm = { ...data, id: uuid(), farm_code: data.farm_code ?? `${prefix}-${year}-${String(seq).padStart(4, '0')}`, created_at: new Date().toISOString() };
     this.db.farms = [farm, ...this.db.farms];
     this.auditWrite(actor, 'farm.created', 'farms', farm.id, null, { farm_code: farm.farm_code, name: farm.name, ward: farm.ward });
     this.save();
