@@ -64,6 +64,62 @@ describe('DataClient workflows', () => {
     expect(reloaded.auditFor('profiles', profile.id)).toHaveLength(2);
   });
 
+  it('lets a new demo farmer create a farm and register its first animal', () => {
+    const client = new DataClient();
+    const newFarmer = client.createDemoAccount({
+      full_name: 'New Demo Farmer',
+      phone: '+254 700 000 333',
+      role: 'farmer',
+    });
+    expect(client.farmsForUser(newFarmer)).toHaveLength(0);
+
+    const farm = client.createFarm(newFarmer, {
+      name: 'Sunrise Dairy Farm',
+      owner_id: newFarmer.id,
+      county: 'Nyamira',
+      sub_county: 'Borabu',
+      ward: 'Kiabonyoru Borabu',
+      lat: -0.3923,
+      lng: 34.9012,
+      herd_size: 0,
+      primary_breed: 'Friesian × Sahiwal',
+      sponsor_id: null,
+    });
+
+    expect(farm.farm_code).toMatch(/^NYM-\d{4}-\d{4}$/);
+    expect(client.farmsForUser(newFarmer).map((row) => row.id)).toContain(farm.id);
+    expect(new DataClient().farmById(farm.id)?.ward).toBe('Kiabonyoru Borabu');
+
+    const animal = client.createAnimal(newFarmer, {
+      tag_number: 'NYM-DEMO-001',
+      farm_id: farm.id,
+      species: 'cattle',
+      breed: 'Friesian × Sahiwal',
+      sex: 'female',
+      dob: '2024-01-01',
+      stage: 'heifer',
+      parity: 0,
+      status: 'healthy',
+      dam_tag: null,
+      last_milk_yield_kg: null,
+    });
+    const kase = client.createCaseFromScreening(newFarmer, {
+      animal_id: animal.id,
+      farm_id: farm.id,
+      chief_complaint: 'Animal has a fever and is not eating',
+      symptoms: ['high_fever', 'loss_of_appetite'],
+      ai_confidence: 0.82,
+      ai_differential: [{ disease: 'East Coast fever', confidence: 0.82, urgency: 'priority', advice: 'Contact a veterinary professional for assessment.' }],
+      priority: 'priority',
+      assigned_vet_id: null,
+    });
+
+    const reloaded = new DataClient();
+    expect(reloaded.animalsForUser(newFarmer).some((animal) => animal.farm_id === farm.id)).toBe(true);
+    expect(reloaded.farmById(farm.id)?.herd_size).toBe(1);
+    expect(reloaded.casesForUser(newFarmer).some((row) => row.id === kase.id && row.animal_id === animal.id)).toBe(true);
+  });
+
   it('persists a triage case, screening, event, notification, and audit record', () => {
     const client = new DataClient();
     const user = farmer();
